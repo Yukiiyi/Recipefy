@@ -13,6 +13,9 @@ struct ScanView: View {
   @State private var pickerItem: PhotosPickerItem?
   @ObservedObject var controller: ScanController
   @State private var pickedImage: UIImage?
+  @State private var imageData: Data?
+  @State private var navigateToIngredients = false
+  
   var body: some View {
     VStack(spacing: 16) {
       Text(controller.statusText)
@@ -31,25 +34,28 @@ struct ScanView: View {
           guard let item = newItem,
                 let raw = try? await item.loadTransferable(type: Data.self) else { return }
           pickedImage = UIImage(data: raw)
+          imageData = raw
         }
       }
-        if let img = pickedImage {
-          Image(uiImage: img).resizable().scaledToFit().frame(height: 160).cornerRadius(12)
-        }
+      
+      if let img = pickedImage {
+        Image(uiImage: img).resizable().scaledToFit().frame(height: 160).cornerRadius(12)
+      }
         
       Button("Upload & Create Scan") {
         Task {
-            guard let item = pickerItem else { return }
-            guard let data = try? await item.loadTransferable(type: Data.self) else { return }
-            // optional compression: if we can make a JPEG, use it, else keep original data
-            let imageData: Data
-            if let uiImg = UIImage(data: data), let jpeg = uiImg.jpegData(compressionQuality: 0.75) {
-                imageData = jpeg
-            } else {
-                imageData = data
-            }
-            await controller.uploadAndCreateScan(imageData: imageData)
+          guard let data = imageData else { return }
+          let compressedData: Data
+          if let uiImg = UIImage(data: data), let jpeg = uiImg.jpegData(compressionQuality: 0.75) {
+            compressedData = jpeg
+          } else {
+            compressedData = data
           }
+          await controller.uploadAndCreateScan(imageData: compressedData)
+          if controller.lastScanId != nil {
+            navigateToIngredients = true
+          }
+        }
       }
       .buttonStyle(.borderedProminent)
       .disabled(pickerItem == nil)
@@ -61,10 +67,16 @@ struct ScanView: View {
       }
 
       Spacer()
+      
+      NavigationLink(destination: Group {
+        if let scanId = controller.lastScanId, let data = imageData {
+          IngredientScreen(scanId: scanId, imageData: data)
+        } else {
+          EmptyView()
+        }
+      }, isActive: $navigateToIngredients, label: { EmptyView() })
     }
     .padding()
     .navigationTitle("New Scan")
   }
 }
-
-

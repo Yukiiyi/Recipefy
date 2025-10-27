@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5653D4872EAE587100163918 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = 5653D4862EAE587100163918 /* FirebaseAI */; };
 		7E55043B2EAC175D00395E0F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 7E55043A2EAC175D00395E0F /* FirebaseAuth */; };
 		7E55043D2EAC175D00395E0F /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 7E55043C2EAC175D00395E0F /* FirebaseCore */; };
 		7E55043F2EAC175D00395E0F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 7E55043E2EAC175D00395E0F /* FirebaseFirestore */; };
@@ -65,6 +66,7 @@
 				7E55043F2EAC175D00395E0F /* FirebaseFirestore in Frameworks */,
 				7E5504432EAC175D00395E0F /* FirebaseStorage in Frameworks */,
 				7E5504412EAC175D00395E0F /* FirebaseFunctions in Frameworks */,
+				5653D4872EAE587100163918 /* FirebaseAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +132,7 @@
 				7E55043E2EAC175D00395E0F /* FirebaseFirestore */,
 				7E5504402EAC175D00395E0F /* FirebaseFunctions */,
 				7E5504422EAC175D00395E0F /* FirebaseStorage */,
+				5653D4862EAE587100163918 /* FirebaseAI */,
 			);
 			productName = Recipefy;
 			productReference = 7E5504012EAAB80200395E0F /* Recipefy.app */;
@@ -612,6 +615,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		5653D4862EAE587100163918 /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E5504392EAC175D00395E0F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
+		};
 		7E55043A2EAC175D00395E0F /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7E5504392EAC175D00395E0F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
