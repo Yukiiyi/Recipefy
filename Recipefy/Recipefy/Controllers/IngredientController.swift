@@ -43,14 +43,9 @@ final class IngredientController: ObservableObject {
     }
   }
   
-  func saveIngredients() async {
+  func saveIngredients(scanId: String) async {
     guard let ingredients = currentIngredients else {
       statusText = "No ingredients to save"
-      return
-    }
-    
-    guard let userId = Auth.auth().currentUser?.uid else {
-      statusText = "No authenticated user"
       return
     }
     
@@ -58,17 +53,23 @@ final class IngredientController: ObservableObject {
     statusText = "Saving to database..."
     
     do {
-      let ingredientsData = ingredients.map { $0.toDictionary() }
-      let analysisData: [String: Any] = [
-        "userId": userId,
-        "ingredients": ingredientsData,
-        "ingredientCount": ingredients.count,
-        "analyzedAt": Timestamp(date: Date()),
-        "type": "ingredient_scan"
-      ]
+      // Save each ingredient as a separate document in the scan's subcollection
+      let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
       
-      let docRef = try await db.collection("ingredient_analyses").addDocument(data: analysisData)
-      statusText = "Saved successfully! (ID: \(docRef.documentID))"
+      var savedCount = 0
+      for ingredient in ingredients {
+        let ingredientData: [String: Any] = [
+          "name": ingredient.name,
+          "amount": ingredient.amount,
+          "category": ingredient.category,
+          "createdAt": Timestamp(date: Date())
+        ]
+        
+        try await ingredientsCollection.addDocument(data: ingredientData)
+        savedCount += 1
+      }
+      
+      statusText = "Saved \(savedCount) ingredients successfully!"
       saveSuccess = true
       isSaving = false
     } catch {

@@ -70,7 +70,7 @@ struct ScanView: View {
       
       NavigationLink(destination: Group {
         if let scanId = controller.lastScanId, let data = imageData {
-          IngredientScreen(scanId: scanId, imageData: data)
+          IngredientListView(scanId: scanId, imageData: data)
         } else {
           EmptyView()
         }
