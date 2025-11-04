@@ -16,13 +16,12 @@ final class IngredientController: ObservableObject {
   @Published var statusText = "Idle"
   @Published var currentIngredients: [Ingredient]?
   @Published var isAnalyzing = false
-  @Published var isSaving = false
   @Published var saveSuccess = false
   
   private let geminiService = GeminiService()
   private let db = Firestore.firestore()
   
-  func analyzeIngredients(imageData: Data) async {
+  func analyzeIngredients(imageData: Data, scanId: String) async {
     isAnalyzing = true
     currentIngredients = nil
     statusText = "Analyzing ingredients with AI..."
@@ -34,8 +33,10 @@ final class IngredientController: ObservableObject {
       
       let ingredients = try await geminiService.analyzeIngredients(image: image)
       currentIngredients = ingredients
-      statusText = "Found \(ingredients.count) ingredients!"
       isAnalyzing = false
+      
+      // Automatically save ingredients after analysis
+      await saveIngredients(scanId: scanId)
     } catch {
       currentIngredients = nil
       statusText = "Error: \(error.localizedDescription)"
@@ -43,20 +44,15 @@ final class IngredientController: ObservableObject {
     }
   }
   
-  func saveIngredients(scanId: String) async {
+  private func saveIngredients(scanId: String) async {
     guard let ingredients = currentIngredients else {
-      statusText = "No ingredients to save"
       return
     }
-    
-    isSaving = true
-    statusText = "Saving to database..."
     
     do {
       // Save each ingredient as a separate document in the scan's subcollection
       let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
       
-      var savedCount = 0
       for ingredient in ingredients {
         let ingredientData: [String: Any] = [
           "name": ingredient.name,
@@ -66,16 +62,12 @@ final class IngredientController: ObservableObject {
         ]
         
         try await ingredientsCollection.addDocument(data: ingredientData)
-        savedCount += 1
       }
       
-      statusText = "Saved \(savedCount) ingredients successfully!"
       saveSuccess = true
-      isSaving = false
     } catch {
       statusText = "Save error: \(error.localizedDescription)"
       saveSuccess = false
-      isSaving = false
     }
   }
 }
