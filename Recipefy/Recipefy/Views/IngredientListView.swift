@@ -1,5 +1,5 @@
 //
-//  IngredientScreen.swift
+//  IngredientListView.swift
 //  Recipefy
 //
 //  Created by yuqi zou on 10/25/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct IngredientScreen: View {
+struct IngredientListView: View {
   let scanId: String
   let imageData: Data
   @StateObject private var controller = IngredientController()
@@ -44,7 +44,11 @@ struct IngredientScreen: View {
                 Text("\(index + 1).").fontWeight(.semibold).foregroundStyle(.secondary)
                 VStack(alignment: .leading, spacing: 2) {
                   Text(ingredients[index].name.capitalized).font(.body)
-                  Text(ingredients[index].amount).font(.caption).foregroundStyle(.secondary)
+                  HStack(spacing: 8) {
+                    Text(ingredients[index].amount).font(.caption).foregroundStyle(.secondary)
+                    Text("•").font(.caption).foregroundStyle(.secondary)
+                    Text(ingredients[index].category).font(.caption).foregroundStyle(.blue)
+                  }
                 }
                 Spacer()
               }
@@ -57,7 +61,7 @@ struct IngredientScreen: View {
         
         if controller.currentIngredients != nil && !controller.saveSuccess {
           Button {
-            Task { await controller.saveIngredients() }
+            Task { await controller.saveIngredients(scanId: scanId) }
           } label: {
             HStack {
               if controller.isSaving {
