@@ -118,6 +118,34 @@ final class IngredientController: ObservableObject {
       print("Error adding ingredient: \(error)")
     }
   }
+  
+  func updateIngredient(scanId: String, ingredient: Ingredient, name: String, amount: String, category: String) async {
+    guard let ingredientId = ingredient.id else {
+      statusText = "Cannot update: ingredient has no ID"
+      return
+    }
+    
+    do {
+      let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
+      
+      let ingredientData: [String: Any] = [
+        "name": name,
+        "amount": amount,
+        "category": category,
+        "createdAt": ingredient.id != nil ? Timestamp(date: Date()) : Timestamp(date: Date()) // Keep original if exists
+      ]
+      
+      try await ingredientsCollection.document(ingredientId).setData(ingredientData, merge: true)
+      
+      // Update in local state
+      if let index = currentIngredients?.firstIndex(where: { $0.id == ingredientId }) {
+        currentIngredients?[index] = Ingredient(id: ingredientId, name: name, amount: amount, category: category)
+      }
+    } catch {
+      statusText = "Update error: \(error.localizedDescription)"
+      print("Error updating ingredient: \(error)")
+    }
+  }
 }
 
 enum IngredientError: LocalizedError {
