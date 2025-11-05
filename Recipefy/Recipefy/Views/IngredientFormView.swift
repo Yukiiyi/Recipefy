@@ -42,20 +42,31 @@ struct IngredientFormView: View {
   var body: some View {
     NavigationView {
       Form {
-        Section {
-          TextField("Ingredient Name", text: $name)
+        Section("Ingredient Name") {
+          TextField("e.g., Chicken Breast", text: $name)
             .autocorrectionDisabled()
-          
-          TextField("Amount (e.g., 2 cups, 500g)", text: $amount)
+        }
+        
+        Section("Amount") {
+          TextField("e.g., 2 cups, 500g", text: $amount)
             .autocorrectionDisabled()
-          
-          Picker("Category", selection: $category) {
-            ForEach(categories, id: \.self) { category in
-              Text(category).tag(category)
+        }
+        
+        Section("Category") {
+          VStack(spacing: 10) {
+            HStack(spacing: 10) {
+              categoryButton("Vegetables")
+              categoryButton("Proteins")
+              categoryButton("Grains")
+            }
+            HStack(spacing: 8) {
+              categoryButton("Dairy")
+              categoryButton("Seasonings")
+              categoryButton("Oil")
+              categoryButton("Other")
             }
           }
-        } header: {
-          Text("Ingredient Details")
+          .padding(.vertical, 8)
         }
       }
       .navigationTitle(isEditing ? "Edit Ingredient" : "Add Ingredient")
@@ -120,6 +131,23 @@ struct IngredientFormView: View {
         }
       }
     }
+  }
+  
+  // helper function to create category buttons
+  private func categoryButton(_ cat: String) -> some View {
+    Button(action: {
+      category = cat
+    }) {
+      Text(cat)
+        .font(.subheadline)
+        .fontWeight(.medium)
+        .foregroundStyle(category == cat ? .white : .primary)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(category == cat ? Color.green : Color.gray.opacity(0.15))
+        .cornerRadius(12)
+    }
+    .buttonStyle(.plain)
   }
 }
 
