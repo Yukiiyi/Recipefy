@@ -34,9 +34,10 @@ struct IngredientListView: View {
       }
       
       if let ingredients = controller.currentIngredients {
-        List {
-          Section {
-            ForEach(ingredients) { ingredient in
+        VStack(spacing: 0) {
+          List {
+            Section {
+              ForEach(ingredients) { ingredient in
               HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
                   Text(ingredient.name.capitalized)
@@ -50,8 +51,13 @@ struct IngredientListView: View {
                       .font(.caption)
                       .foregroundStyle(.secondary)
                     Text(ingredient.category)
-                      .font(.subheadline)
-                      .foregroundStyle(.blue)
+                      .font(.caption)
+                      .fontWeight(.medium)
+                      .foregroundStyle(.secondary)
+                      .padding(.horizontal, 8)
+                      .padding(.vertical, 4)
+                      .background(Color.gray.opacity(0.2))
+                      .cornerRadius(6)
                   }
                 }
                 
@@ -62,20 +68,42 @@ struct IngredientListView: View {
                   showingEditForm = true
                 }) {
                   Image(systemName: "pencil.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(.gray)
+                    .font(.title)
+                    .foregroundStyle(.green)
                 }
               }
               .padding(.vertical, 8)
             }
             .onDelete(perform: deleteIngredients)
-          } header: {
-            Text("\(ingredients.count) Ingredients Detected")
-              .font(.subheadline)
-              .textCase(nil)
+            } header: {
+              Text("\(ingredients.count) Ingredients Detected")
+                .font(.subheadline)
+                .textCase(nil)
+            }
           }
+          .listStyle(.insetGrouped)
+          
+          // Find Recipes Button
+          // TODO: Replace Button with NavigationLink when RecipesView is ready
+          // NavigationLink(destination: RecipesView(scanId: scanId, ingredients: ingredients)) {
+          Button(action: {
+            // TODO: Navigate to Recipes view
+            print("Find Recipes tapped - scanId: \(scanId), ingredients: \(ingredients.count)")
+          }) {
+            HStack {
+              Image(systemName: "magnifyingglass")
+                .font(.title3)
+              Text("Find Recipes")
+                .font(.headline)
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color.green)
+            .cornerRadius(12)
+          }
+          .padding()
         }
-        .listStyle(.insetGrouped)
       }
     }
     .navigationTitle("Ingredients")
@@ -87,6 +115,7 @@ struct IngredientListView: View {
         }) {
           Image(systemName: "plus")
             .font(.body.weight(.semibold))
+            .foregroundStyle(.green)
         }
       }
     }
