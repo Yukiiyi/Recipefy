@@ -32,11 +32,11 @@ final class IngredientController: ObservableObject {
       }
       
       let ingredients = try await geminiService.analyzeIngredients(image: image)
-      currentIngredients = ingredients
-      isAnalyzing = false
+      // Don't set currentIngredients yet - wait until saved with IDs
       
       // Automatically save ingredients after analysis
-      await saveIngredients(scanId: scanId)
+      await saveIngredients(scanId: scanId, ingredients: ingredients)
+      isAnalyzing = false
     } catch {
       currentIngredients = nil
       statusText = "Error: \(error.localizedDescription)"
@@ -44,16 +44,14 @@ final class IngredientController: ObservableObject {
     }
   }
   
-  private func saveIngredients(scanId: String) async {
-    guard let ingredients = currentIngredients else {
-      return
-    }
+  private func saveIngredients(scanId: String, ingredients: [Ingredient]) async {
+    var ingredientsWithIds = ingredients
     
     do {
       // Save each ingredient as a separate document in the scan's subcollection
       let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
       
-      for ingredient in ingredients {
+      for (index, ingredient) in ingredientsWithIds.enumerated() {
         let ingredientData: [String: Any] = [
           "name": ingredient.name,
           "amount": ingredient.amount,
@@ -61,13 +59,37 @@ final class IngredientController: ObservableObject {
           "createdAt": Timestamp(date: Date())
         ]
         
-        try await ingredientsCollection.addDocument(data: ingredientData)
+        let docRef = try await ingredientsCollection.addDocument(data: ingredientData)
+        ingredientsWithIds[index].id = docRef.documentID
       }
       
+      // Only set currentIngredients after all IDs are assigned
+      currentIngredients = ingredientsWithIds
       saveSuccess = true
     } catch {
       statusText = "Save error: \(error.localizedDescription)"
       saveSuccess = false
+    }
+  }
+  
+  func deleteIngredient(scanId: String, ingredient: Ingredient) async {
+    guard let ingredientId = ingredient.id else {
+      statusText = "Cannot delete: ingredient has no ID"
+      return
+    }
+    
+    do {
+      // Delete from Firestore
+      try await db.collection("scans")
+        .document(scanId)
+        .collection("ingredients")
+        .document(ingredientId)
+        .delete()
+      
+      // Remove from local state
+      currentIngredients?.removeAll { $0.id == ingredientId }
+    } catch {
+      statusText = "Delete error: \(error.localizedDescription)"
     }
   }
 }
