@@ -60,7 +60,8 @@ class GeminiService {
   }
 }
 
-struct Ingredient: Codable {
+struct Ingredient: Codable, Identifiable {
+  var id: String? // Firestore document ID
   let name: String
   let amount: String
   let category: String
@@ -79,7 +80,7 @@ struct Ingredient: Codable {
           let category = dictionary["category"] else {
       return nil
     }
-    return Ingredient(name: name, amount: amount, category: category)
+    return Ingredient(id: nil, name: name, amount: amount, category: category)
   }
 }
 
