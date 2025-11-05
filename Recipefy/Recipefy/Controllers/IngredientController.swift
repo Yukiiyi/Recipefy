@@ -92,6 +92,32 @@ final class IngredientController: ObservableObject {
       statusText = "Delete error: \(error.localizedDescription)"
     }
   }
+  
+  func addIngredient(scanId: String, name: String, amount: String, category: String) async {
+    do {
+      let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
+      
+      let ingredientData: [String: Any] = [
+        "name": name,
+        "amount": amount,
+        "category": category,
+        "createdAt": Timestamp(date: Date())
+      ]
+      
+      let docRef = try await ingredientsCollection.addDocument(data: ingredientData)
+      
+      // Create new ingredient with ID and add to top of list
+      let newIngredient = Ingredient(id: docRef.documentID, name: name, amount: amount, category: category)
+      if currentIngredients != nil {
+        currentIngredients?.insert(newIngredient, at: 0)  // Add to top
+      } else {
+        currentIngredients = [newIngredient]
+      }
+    } catch {
+      statusText = "Add error: \(error.localizedDescription)"
+      print("Error adding ingredient: \(error)")
+    }
+  }
 }
 
 enum IngredientError: LocalizedError {

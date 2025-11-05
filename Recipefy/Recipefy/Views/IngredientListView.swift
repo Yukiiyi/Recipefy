@@ -12,6 +12,7 @@ struct IngredientListView: View {
   let imageData: Data
   @StateObject private var controller = IngredientController()
   @Environment(\.dismiss) var dismiss
+  @State private var showingAddForm = false
   
   var body: some View {
     VStack(spacing: 0) {
@@ -79,12 +80,15 @@ struct IngredientListView: View {
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
         Button(action: {
-          // TODO: Add new ingredient
+          showingAddForm = true
         }) {
           Image(systemName: "plus")
             .font(.body.weight(.semibold))
         }
       }
+    }
+    .sheet(isPresented: $showingAddForm) {
+      IngredientFormView(controller: controller, scanId: scanId)
     }
     .task {
       if controller.currentIngredients == nil && !controller.isAnalyzing {
