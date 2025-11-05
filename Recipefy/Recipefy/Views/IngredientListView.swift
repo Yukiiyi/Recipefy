@@ -13,6 +13,8 @@ struct IngredientListView: View {
   @StateObject private var controller = IngredientController()
   @Environment(\.dismiss) var dismiss
   @State private var showingAddForm = false
+  @State private var showingEditForm = false
+  @State private var ingredientToEdit: Ingredient?
   
   var body: some View {
     VStack(spacing: 0) {
@@ -56,7 +58,8 @@ struct IngredientListView: View {
                 Spacer()
                 
                 Button(action: {
-                  // TODO: Edit ingredient
+                  ingredientToEdit = ingredient
+                  showingEditForm = true
                 }) {
                   Image(systemName: "pencil.circle.fill")
                     .font(.title2)
@@ -89,6 +92,11 @@ struct IngredientListView: View {
     }
     .sheet(isPresented: $showingAddForm) {
       IngredientFormView(controller: controller, scanId: scanId)
+    }
+    .sheet(isPresented: $showingEditForm) {
+      if let ingredient = ingredientToEdit {
+        IngredientFormView(controller: controller, scanId: scanId, ingredient: ingredient)
+      }
     }
     .task {
       if controller.currentIngredients == nil && !controller.isAnalyzing {

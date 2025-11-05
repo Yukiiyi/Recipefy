@@ -71,7 +71,13 @@ struct IngredientFormView: View {
           Button("Save") {
             Task {
               isSaving = true
-              await controller.addIngredient(scanId: scanId, name: name, amount: amount, category: category)
+              if let ingredient = ingredient {
+                // Editing existing ingredient
+                await controller.updateIngredient(scanId: scanId, ingredient: ingredient, name: name, amount: amount, category: category)
+              } else {
+                // Adding new ingredient
+                await controller.addIngredient(scanId: scanId, name: name, amount: amount, category: category)
+              }
               isSaving = false
               shouldDismiss = true
             }
@@ -80,13 +86,17 @@ struct IngredientFormView: View {
         }
         
         // Show delete button only when editing
-        if isEditing, let ingredient = ingredient {
+        if isEditing {
           ToolbarItem(placement: .bottomBar) {
             Button(role: .destructive) {
               showingDeleteAlert = true
             } label: {
-              Label("Delete Ingredient", systemImage: "trash")
-                .foregroundStyle(.red)
+              HStack {
+                Image(systemName: "trash")
+                Text("Delete Ingredient")
+              }
+              .foregroundStyle(.red)
+              .padding()
             }
           }
         }
@@ -111,5 +121,25 @@ struct IngredientFormView: View {
       }
     }
   }
+}
+
+#Preview("Add Ingredient") {
+  IngredientFormView(
+    controller: IngredientController(),
+    scanId: "preview-scan-id"
+  )
+}
+
+#Preview("Edit Ingredient") {
+  IngredientFormView(
+    controller: IngredientController(),
+    scanId: "preview-scan-id",
+    ingredient: Ingredient(
+      id: "preview-ingredient-id",
+      name: "Chicken Breast",
+      amount: "500 g",
+      category: "Proteins"
+    )
+  )
 }
 
