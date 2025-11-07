@@ -55,31 +55,29 @@ struct AuthView: View {
                     // Social buttons
                     VStack(spacing: 12) {
                         Button {
-                            Task { await controller.signInWithGoogle() }
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image("google-logo")
-                                    .resizable()
-                                    .frame(width: 18, height: 18)
-                                
-                                Text(isLoginMode ? "Sign in with Google" : "Sign up with Google")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.black)
-
-                                Spacer(minLength: 0)
-                            }
-                            .padding(.horizontal, 16)
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                            .background(Color.white)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.35), lineWidth: 1)
-                            )
-                            .cornerRadius(8)
-                            .contentShape(Rectangle())
-                            .accessibilityLabel(isLoginMode ? "Sign in with Google" : "Sign up with Google")
+                        Task { await controller.signInWithGoogle() }
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image("google-logo")
+                                .resizable()
+                                .frame(width: 18, height: 18)
+                            
+                            Text(isLoginMode ? "Sign in with Google" : "Sign up with Google")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.black)
                         }
-                        .disabled(controller.isLoading)
+                        .frame(maxWidth: .infinity) 
+                        .frame(height: 50)
+                        .background(Color.white)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.35), lineWidth: 1)
+                        )
+                        .cornerRadius(8)
+                        .contentShape(Rectangle())
+                        .accessibilityLabel(isLoginMode ? "Sign in with Google" : "Sign up with Google")
+                    }
+                    .disabled(controller.isLoading)
 
 
                         SignInWithAppleButton(
