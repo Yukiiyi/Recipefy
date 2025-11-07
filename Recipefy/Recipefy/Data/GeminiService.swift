@@ -74,6 +74,41 @@ struct Ingredient: Codable {
   }
 }
 
+struct Recipe: Codable {
+  let recipeID: String
+  let ingredients: [String]
+  var preparation: [String]
+  let calories: Int
+  let time: Int
+  let protein: Int
+  let carbs: Int
+  let fat: Int
+  let fiber: Int
+  let description: String
+	
+	func toDictionary() -> [String: String] {
+		var dict: [String: String] = [:]
+		dict["recipeID"] = recipeID
+		dict["ingredients"] = ingredients.joined(separator: ",")
+		dict["preparation"] = preparation.joined(separator: ",")
+		dict["calories"] = "\(calories)"
+		dict["time"] = "\(time)"
+		dict["protein"] = "\(protein)"
+		dict["carbs"] = "\(carbs)"
+		dict["fat"] = "\(fat)"
+		dict["fiber"] = "\(fiber)"
+		dict["description"] = description
+		return dict
+	}
+	
+	static func from(dictionary: [String: String]) -> Recipe? {
+		guard let recipeID = dictionary["recipeID"], let ingredientsString = dictionary["ingredients"], let preparationString = dictionary["preparation"], let caloriesString = dictionary["calories"], let timeString = dictionary["time"], let proteinString = dictionary["protein"], let carbsString = dictionary["carbs"], let fatString = dictionary["fat"], let fiberString = dictionary["fiber"], let descriptionString = dictionary["description"] else {
+			return nil
+		}
+		return Recipe(recipeID: recipeID, ingredients: ingredientsString.split(separator: ",").map(\.description), preparation: preparationString.split(separator: ",").map(\.description), calories: Int(caloriesString) ?? 0, time: Int(timeString) ?? 0, protein: Int(proteinString) ?? 0, carbs: Int(carbsString) ?? 0, fat: Int(fatString) ?? 0, fiber: Int(fiberString) ?? 0, description: descriptionString)
+	}
+}
+
 enum GeminiError: LocalizedError {
   case noResponse
   case parsingError
@@ -90,3 +125,4 @@ enum GeminiError: LocalizedError {
     }
   }
 }
+
