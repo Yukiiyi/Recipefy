@@ -58,19 +58,29 @@ struct AuthView: View {
                             Task { await controller.signInWithGoogle() }
                         } label: {
                             HStack(spacing: 12) {
-                                Image(systemName: "globe")
-                                    .font(.system(size: 18, weight: .medium))
+                                Image("google-logo")
+                                    .resizable()
+                                    .frame(width: 18, height: 18)
+                                
                                 Text(isLoginMode ? "Sign in with Google" : "Sign up with Google")
                                     .font(.system(size: 16, weight: .medium))
-                                Spacer()
+                                    .foregroundColor(.black)
+
+                                Spacer(minLength: 0)
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 14)
+                            .padding(.horizontal, 16)
+                            .frame(maxWidth: .infinity, minHeight: 50)
                             .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.35), lineWidth: 1)
+                            )
+                            .cornerRadius(8)
+                            .contentShape(Rectangle())
+                            .accessibilityLabel(isLoginMode ? "Sign in with Google" : "Sign up with Google")
                         }
                         .disabled(controller.isLoading)
+
 
                         SignInWithAppleButton(
                             onRequest: { $0.requestedScopes = [.fullName, .email] },
