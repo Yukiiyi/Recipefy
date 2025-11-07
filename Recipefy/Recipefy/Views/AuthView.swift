@@ -12,8 +12,8 @@ struct AuthView: View {
     @StateObject private var controller = AuthController()
     @State private var isLoginMode = false
     @State private var username = ""
-    @State private var email = ""
-    @State private var password = ""
+    @State private var email = "sampleUser@andrew.cmu.edu"
+    @State private var password = "123456"
     @State private var confirmPassword = ""
 
     var body: some View {
