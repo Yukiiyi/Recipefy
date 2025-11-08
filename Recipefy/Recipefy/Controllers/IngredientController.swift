@@ -144,7 +144,8 @@ final class IngredientController: ObservableObject {
     do {
       let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
       
-      let ingredientData = createIngredientData(name: name, amount: amount, category: category)
+      // Don't update createdAt - it should remain the original timestamp
+      let ingredientData = createIngredientData(name: name, amount: amount, category: category, includeTimestamp: false)
       try await ingredientsCollection.document(ingredientId).setData(ingredientData, merge: true)
       
       // Update in local state
