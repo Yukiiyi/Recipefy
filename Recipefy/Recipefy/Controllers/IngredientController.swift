@@ -55,7 +55,7 @@ final class IngredientController: ObservableObject {
         let ingredientData: [String: Any] = [
           "name": ingredient.name,
           "amount": ingredient.amount,
-          "category": ingredient.category,
+          "category": ingredient.category.rawValue,
           "createdAt": Timestamp(date: Date())
         ]
         
@@ -93,14 +93,14 @@ final class IngredientController: ObservableObject {
     }
   }
   
-  func addIngredient(scanId: String, name: String, amount: String, category: String) async {
+  func addIngredient(scanId: String, name: String, amount: String, category: IngredientCategory) async {
     do {
       let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
       
       let ingredientData: [String: Any] = [
         "name": name,
         "amount": amount,
-        "category": category,
+        "category": category.rawValue,
         "createdAt": Timestamp(date: Date())
       ]
       
@@ -119,7 +119,7 @@ final class IngredientController: ObservableObject {
     }
   }
   
-  func updateIngredient(scanId: String, ingredient: Ingredient, name: String, amount: String, category: String) async {
+  func updateIngredient(scanId: String, ingredient: Ingredient, name: String, amount: String, category: IngredientCategory) async {
     guard let ingredientId = ingredient.id else {
       statusText = "Cannot update: ingredient has no ID"
       return
@@ -131,7 +131,7 @@ final class IngredientController: ObservableObject {
       let ingredientData: [String: Any] = [
         "name": name,
         "amount": amount,
-        "category": category,
+        "category": category.rawValue,
         "createdAt": ingredient.id != nil ? Timestamp(date: Date()) : Timestamp(date: Date()) // Keep original if exists
       ]
       

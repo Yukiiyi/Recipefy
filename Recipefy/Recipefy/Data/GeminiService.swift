@@ -60,30 +60,6 @@ class GeminiService {
   }
 }
 
-struct Ingredient: Codable, Identifiable {
-  var id: String? // Firestore document ID
-  let name: String
-  let amount: String
-  let category: String
-  
-  func toDictionary() -> [String: String] {
-    return [
-      "name": name,
-      "amount": amount,
-      "category": category
-    ]
-  }
-  
-  static func from(dictionary: [String: String]) -> Ingredient? {
-    guard let name = dictionary["name"],
-          let amount = dictionary["amount"],
-          let category = dictionary["category"] else {
-      return nil
-    }
-    return Ingredient(id: nil, name: name, amount: amount, category: category)
-  }
-}
-
 enum GeminiError: LocalizedError {
   case noResponse
   case parsingError

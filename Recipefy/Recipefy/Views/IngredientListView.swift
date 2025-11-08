@@ -50,7 +50,7 @@ struct IngredientListView: View {
                     Text("•")
                       .font(.caption)
                       .foregroundStyle(.secondary)
-                    Text(ingredient.category)
+                    Text(ingredient.category.rawValue)
                       .font(.caption)
                       .fontWeight(.medium)
                       .foregroundStyle(.secondary)
