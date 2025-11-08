@@ -56,6 +56,45 @@ class GeminiService {
     let decoder = JSONDecoder()
     return try decoder.decode([Ingredient].self, from: data)
   }
+	
+	func getRecipe(ingredients: [String]) async throws -> [Recipe] {
+		let prompt = """
+		This is a list of the available ingredients: \(ingredients)
+		Provide 5 unique recipes that can be made using only the amount of ingredients listed. 
+		For each recipe, provide the name, calories, serving size, list of preparation steps (e.g. ["Boil water and cook pasta according to package directions", "Heat olive oil in a large pan over medium heat", ...]) , preparation time in minutes,  list of ingredients used (e.g. ["1 cup tomatoes", "1 lb Chicken Breast", ...]) , nutrition information in a map which contains the amount of carbs, fat, fiber, protein, and a description.
+		
+		Return the result as a JSON array with this exact format:
+		[
+			{
+				"title": "recipe name",
+				"servings": serving_size_as_an_integer,
+				"calories": calories_as_an_integer,
+				"cookMin": preparation_time_in_minutes_as_an_integer,
+				"ingredients": list_of_ingredients,
+				"nutrition": ["carbs": carbs_as_an_integer, "fat": fat_as_an_integer, "fiber": _as_an_integer, "protein": protein_as_an_integer, "description": description]
+				"steps": list_of_preparation_steps
+				
+			}
+		]
+		
+		All fields with the tag "_as_an_integer" should be of type Integer.
+		Return ONLY the JSON array, no additional text.
+		"""
+		
+		let response = try await model.generateContent(prompt)
+		guard let text = response.text else {
+			throw GeminiError.noResponse
+		}
+		
+		return try parseRecipeResponse(from: text)
+	}
+	
+	private func parseRecipeResponse(from jsonString: String) throws -> [Recipe] {
+		let data = Data(jsonString.utf8)
+		let rawRecipes = try JSONDecoder().decode([RawRecipe].self, from: data)
+		let recipes = rawRecipes.map(Recipe.init)
+		return recipes
+	}
 }
 
 struct Ingredient: Codable {
@@ -75,38 +114,54 @@ struct Ingredient: Codable {
 }
 
 struct Recipe: Codable {
-  let recipeID: String
+		let recipeID: String
+		let title: String
+		let description: String
+		let ingredients: [String]
+		let steps: [String]
+		let calories: Int
+		let servings: Int
+		let cookMin: Int
+		let protein: Int
+		let carbs: Int
+		let fat: Int
+		let fiber: Int
+}
+
+struct Nutrition: Codable {
+	let protein: Int
+	let carbs: Int
+	let fat: Int
+	let fiber: Int
+	let description: String
+}
+
+struct RawRecipe: Codable {
+	let recipeID: String
+	let title: String
   let ingredients: [String]
-  var preparation: [String]
+  let steps: [String]
+	let cookMin: Int
   let calories: Int
-  let time: Int
-  let protein: Int
-  let carbs: Int
-  let fat: Int
-  let fiber: Int
-  let description: String
-	
-	func toDictionary() -> [String: String] {
-		var dict: [String: String] = [:]
-		dict["recipeID"] = recipeID
-		dict["ingredients"] = ingredients.joined(separator: ",")
-		dict["preparation"] = preparation.joined(separator: ",")
-		dict["calories"] = "\(calories)"
-		dict["time"] = "\(time)"
-		dict["protein"] = "\(protein)"
-		dict["carbs"] = "\(carbs)"
-		dict["fat"] = "\(fat)"
-		dict["fiber"] = "\(fiber)"
-		dict["description"] = description
-		return dict
-	}
-	
-	static func from(dictionary: [String: String]) -> Recipe? {
-		guard let recipeID = dictionary["recipeID"], let ingredientsString = dictionary["ingredients"], let preparationString = dictionary["preparation"], let caloriesString = dictionary["calories"], let timeString = dictionary["time"], let proteinString = dictionary["protein"], let carbsString = dictionary["carbs"], let fatString = dictionary["fat"], let fiberString = dictionary["fiber"], let descriptionString = dictionary["description"] else {
-			return nil
+	let servings: Int
+	let nutrition: Nutrition
+}
+
+extension Recipe {
+		init(from raw: RawRecipe) {
+				self.recipeID = UUID().uuidString
+				self.title = raw.title
+				self.description = raw.nutrition.description
+				self.ingredients = raw.ingredients
+				self.steps = raw.steps
+				self.calories = raw.calories
+				self.servings = raw.servings
+				self.cookMin = raw.cookMin
+				self.protein = raw.nutrition.protein
+				self.carbs = raw.nutrition.carbs
+				self.fat = raw.nutrition.fat
+				self.fiber = raw.nutrition.fiber
 		}
-		return Recipe(recipeID: recipeID, ingredients: ingredientsString.split(separator: ",").map(\.description), preparation: preparationString.split(separator: ",").map(\.description), calories: Int(caloriesString) ?? 0, time: Int(timeString) ?? 0, protein: Int(proteinString) ?? 0, carbs: Int(carbsString) ?? 0, fat: Int(fatString) ?? 0, fiber: Int(fiberString) ?? 0, description: descriptionString)
-	}
 }
 
 enum GeminiError: LocalizedError {
