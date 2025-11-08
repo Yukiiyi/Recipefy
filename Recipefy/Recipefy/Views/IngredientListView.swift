@@ -132,6 +132,15 @@ struct IngredientListView: View {
         await controller.analyzeIngredients(imageData: imageData, scanId: scanId)
       }
     }
+    .alert("Error", isPresented: .constant(controller.errorMessage != nil)) {
+      Button("OK") {
+        controller.errorMessage = nil
+      }
+    } message: {
+      if let errorMessage = controller.errorMessage {
+        Text(errorMessage)
+      }
+    }
   }
   
   private func deleteIngredients(at offsets: IndexSet) {

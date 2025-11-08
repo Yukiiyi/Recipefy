@@ -128,6 +128,15 @@ struct IngredientFormView: View {
           dismiss()
         }
       }
+      .alert("Error", isPresented: .constant(controller.errorMessage != nil)) {
+        Button("OK") {
+          controller.errorMessage = nil
+        }
+      } message: {
+        if let errorMessage = controller.errorMessage {
+          Text(errorMessage)
+        }
+      }
     }
   }
   

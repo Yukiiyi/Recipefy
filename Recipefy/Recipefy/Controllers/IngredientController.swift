@@ -17,6 +17,7 @@ final class IngredientController: ObservableObject {
   @Published var currentIngredients: [Ingredient]?
   @Published var isAnalyzing = false
   @Published var saveSuccess = false
+  @Published var errorMessage: String?
   
   private let geminiService = GeminiService()
   private let db = Firestore.firestore()
@@ -74,7 +75,7 @@ final class IngredientController: ObservableObject {
   
   func deleteIngredient(scanId: String, ingredient: Ingredient) async {
     guard let ingredientId = ingredient.id else {
-      statusText = "Cannot delete: ingredient has no ID"
+      errorMessage = "Cannot delete: ingredient has no ID"
       return
     }
     
@@ -89,7 +90,7 @@ final class IngredientController: ObservableObject {
       // Remove from local state
       currentIngredients?.removeAll { $0.id == ingredientId }
     } catch {
-      statusText = "Delete error: \(error.localizedDescription)"
+      errorMessage = "Failed to delete ingredient: \(error.localizedDescription)"
     }
   }
   
@@ -114,14 +115,14 @@ final class IngredientController: ObservableObject {
         currentIngredients = [newIngredient]
       }
     } catch {
-      statusText = "Add error: \(error.localizedDescription)"
+      errorMessage = "Failed to add ingredient: \(error.localizedDescription)"
       print("Error adding ingredient: \(error)")
     }
   }
   
   func updateIngredient(scanId: String, ingredient: Ingredient, name: String, amount: String, category: IngredientCategory) async {
     guard let ingredientId = ingredient.id else {
-      statusText = "Cannot update: ingredient has no ID"
+      errorMessage = "Cannot update: ingredient has no ID"
       return
     }
     
@@ -142,7 +143,7 @@ final class IngredientController: ObservableObject {
         currentIngredients?[index] = Ingredient(id: ingredientId, name: name, amount: amount, category: category)
       }
     } catch {
-      statusText = "Update error: \(error.localizedDescription)"
+      errorMessage = "Failed to update ingredient: \(error.localizedDescription)"
       print("Error updating ingredient: \(error)")
     }
   }
