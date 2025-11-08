@@ -21,13 +21,15 @@ class GeminiService {
   func analyzeIngredients(image: UIImage) async throws -> [Ingredient] {
     let prompt = """
     Analyze this food image and identify all the ingredients you can see.
-    For each ingredient, provide the name and estimated amount.
+    For each ingredient, provide the name, estimated amount, and food category.
     
+    Categories should be one of: [Vegetables, Proteins, Grains, Dairy, Seasonings, Oil, Other].
     Return the result as a JSON array with this exact format:
     [
       {
         "name": "ingredient name",
-        "amount": "estimated amount (e.g., '2 cups', '1 tbsp', '500g', '3 pieces')"
+        "amount": "estimated amount (e.g., '2 cups', '1 tbsp', '500 g', '3 pieces')",
+        "category": "appropriate category from the list above"
       }
     ]
     
@@ -55,22 +57,6 @@ class GeminiService {
     
     let decoder = JSONDecoder()
     return try decoder.decode([Ingredient].self, from: data)
-  }
-}
-
-struct Ingredient: Codable {
-  let name: String
-  let amount: String
-  
-  func toDictionary() -> [String: String] {
-    return ["name": name, "amount": amount]
-  }
-  
-  static func from(dictionary: [String: String]) -> Ingredient? {
-    guard let name = dictionary["name"], let amount = dictionary["amount"] else {
-      return nil
-    }
-    return Ingredient(name: name, amount: amount)
   }
 }
 
