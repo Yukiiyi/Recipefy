@@ -146,9 +146,12 @@ struct IngredientListView: View {
   private func deleteIngredients(at offsets: IndexSet) {
     guard let ingredients = controller.currentIngredients else { return }
     
-    for index in offsets {
-      let ingredient = ingredients[index]
-      Task {
+    // Capture ingredients to delete before starting async operations
+    let ingredientsToDelete = offsets.map { ingredients[$0] }
+    
+    // Delete sequentially to avoid race conditions
+    Task {
+      for ingredient in ingredientsToDelete {
         await controller.deleteIngredient(scanId: scanId, ingredient: ingredient)
       }
     }
