@@ -8,5 +8,5 @@
 import Foundation
 
 protocol ScanRepository {
-  func createScan(userId: String, imagePath: String) async throws -> String
+  func createScan(userId: String, imagePaths: [String]) async throws -> String
 }

@@ -11,7 +11,7 @@ import FirebaseFirestore
 struct Scan: Identifiable, Codable {
   @DocumentID var id: String?
   let userId: String
-  let imagePath: String
+  let imagePaths: [String]
   var status: String            // "uploaded" | "processing" | "done" | "error"
   let createdAt: Date
 }

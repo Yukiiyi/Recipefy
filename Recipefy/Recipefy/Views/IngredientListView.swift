@@ -9,12 +9,24 @@ import SwiftUI
 
 struct IngredientListView: View {
   let scanId: String
-  let imageData: Data
+  let imageDataArray: [Data]
   @StateObject private var controller = IngredientController()
   @Environment(\.dismiss) var dismiss
   @State private var showingAddForm = false
   @State private var showingEditForm = false
   @State private var ingredientToEdit: Ingredient?
+  
+  // Convenience init for single image (backward compatibility)
+  init(scanId: String, imageData: Data) {
+    self.scanId = scanId
+    self.imageDataArray = [imageData]
+  }
+  
+  // Primary init for multiple images
+  init(scanId: String, imageDataArray: [Data]) {
+    self.scanId = scanId
+    self.imageDataArray = imageDataArray
+  }
   
   var body: some View {
     VStack(spacing: 0) {
@@ -50,7 +62,7 @@ struct IngredientListView: View {
                     Text("•")
                       .font(.caption)
                       .foregroundStyle(.secondary)
-                    Text(ingredient.category)
+                    Text(ingredient.category.rawValue)
                       .font(.caption)
                       .fontWeight(.medium)
                       .foregroundStyle(.secondary)
@@ -84,12 +96,7 @@ struct IngredientListView: View {
           .listStyle(.insetGrouped)
           
           // Find Recipes Button
-          // TODO: Replace Button with NavigationLink when RecipesView is ready
-          // NavigationLink(destination: RecipesView(scanId: scanId, ingredients: ingredients)) {
-          Button(action: {
-            // TODO: Navigate to Recipes view
-            print("Find Recipes tapped - scanId: \(scanId), ingredients: \(ingredients.count)")
-          }) {
+          NavigationLink(destination: RecipeView(ingredients: ingredients)) {
             HStack {
               Image(systemName: "magnifyingglass")
                 .font(.title3)
@@ -129,7 +136,16 @@ struct IngredientListView: View {
     }
     .task {
       if controller.currentIngredients == nil && !controller.isAnalyzing {
-        await controller.analyzeIngredients(imageData: imageData, scanId: scanId)
+        await controller.analyzeMultipleImages(imageDataArray: imageDataArray, scanId: scanId)
+      }
+    }
+    .alert("Error", isPresented: .constant(controller.errorMessage != nil)) {
+      Button("OK") {
+        controller.errorMessage = nil
+      }
+    } message: {
+      if let errorMessage = controller.errorMessage {
+        Text(errorMessage)
       }
     }
   }
@@ -137,9 +153,12 @@ struct IngredientListView: View {
   private func deleteIngredients(at offsets: IndexSet) {
     guard let ingredients = controller.currentIngredients else { return }
     
-    for index in offsets {
-      let ingredient = ingredients[index]
-      Task {
+    // Capture ingredients to delete before starting async operations
+    let ingredientsToDelete = offsets.map { ingredients[$0] }
+    
+    // Delete sequentially to avoid race conditions
+    Task {
+      for ingredient in ingredientsToDelete {
         await controller.deleteIngredient(scanId: scanId, ingredient: ingredient)
       }
     }
