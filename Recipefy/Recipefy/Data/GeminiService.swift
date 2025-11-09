@@ -72,10 +72,15 @@ class GeminiService {
 				"servings": serving_size_as_an_integer,
 				"calories": calories_as_an_integer,
 				"cookMin": preparation_time_in_minutes_as_an_integer,
-				"ingredients": list_of_ingredients,
-				"nutrition": ["carbs": carbs_as_an_integer, "fat": fat_as_an_integer, "fiber": _as_an_integer, "protein": protein_as_an_integer, "description": description]
-				"steps": list_of_preparation_steps
-				
+				"ingredients": ["list", "of", "ingredients"],
+				"nutrition": {
+					"carbs": carbs_as_an_integer, 
+					"fat": fat_as_an_integer, 
+					"fiber": fiber_as_an_integer, 
+					"protein": protein_as_an_integer, 
+					"description": "description text"
+				},
+				"steps": ["list", "of", "preparation", "steps"]
 			}
 		]
 		
@@ -92,27 +97,20 @@ class GeminiService {
 	}
 	
 	private func parseRecipeResponse(from jsonString: String) throws -> [Recipe] {
-		let data = Data(jsonString.utf8)
+		// Clean JSON response (remove markdown code blocks like ingredients parsing does)
+		let cleanJson = jsonString
+			.replacingOccurrences(of: "```json", with: "")
+			.replacingOccurrences(of: "```", with: "")
+			.trimmingCharacters(in: .whitespacesAndNewlines)
+		
+		guard let data = cleanJson.data(using: .utf8) else {
+			throw GeminiError.parsingError
+		}
+		
 		let rawRecipes = try JSONDecoder().decode([RawRecipe].self, from: data)
 		let recipes = rawRecipes.map(Recipe.init)
 		return recipes
 	}
-}
-
-struct Ingredient: Codable {
-  let name: String
-  let amount: String
-  
-  func toDictionary() -> [String: String] {
-    return ["name": name, "amount": amount]
-  }
-  
-  static func from(dictionary: [String: String]) -> Ingredient? {
-    guard let name = dictionary["name"], let amount = dictionary["amount"] else {
-      return nil
-    }
-    return Ingredient(name: name, amount: amount)
-  }
 }
 
 struct Recipe: Codable {
@@ -139,7 +137,6 @@ struct Nutrition: Codable {
 }
 
 struct RawRecipe: Codable {
-	let recipeID: String
 	let title: String
   let ingredients: [String]
   let steps: [String]

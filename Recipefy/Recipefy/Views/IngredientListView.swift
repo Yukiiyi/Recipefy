@@ -84,12 +84,7 @@ struct IngredientListView: View {
           .listStyle(.insetGrouped)
           
           // Find Recipes Button
-          // TODO: Replace Button with NavigationLink when RecipesView is ready
-          // NavigationLink(destination: RecipesView(scanId: scanId, ingredients: ingredients)) {
-          Button(action: {
-            // TODO: Navigate to Recipes view
-            print("Find Recipes tapped - scanId: \(scanId), ingredients: \(ingredients.count)")
-          }) {
+          NavigationLink(destination: RecipeView(ingredients: ingredients)) {
             HStack {
               Image(systemName: "magnifyingglass")
                 .font(.title3)
