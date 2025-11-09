@@ -10,12 +10,12 @@ import FirebaseFirestore
 final class FirebaseScanRepository: ScanRepository {
   private let db = Firestore.firestore()
 
-  func createScan(userId: String, imagePath: String) async throws -> String {
+  func createScan(userId: String, imagePaths: [String]) async throws -> String {
     let doc = db.collection(FirestorePaths.scans).document()
     let scan = Scan(
       id: doc.documentID,
       userId: userId,
-      imagePath: imagePath,
+      imagePaths: imagePaths,
       status: "uploaded",
       createdAt: Date()
     )
