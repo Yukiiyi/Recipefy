@@ -14,11 +14,8 @@ struct RecipefyApp: App {
 
   var body: some Scene {
     WindowGroup {
-        let storage = FirebaseStorageService()
-        let scans = FirebaseScanRepository()
-        let controller = ScanController(storage: storage, scans: scans)
       NavigationView {
-        ScanView(controller: controller)
+        HomeView()
       }
     }
   }

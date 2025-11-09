@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct HomeView: View {
-  @State private var navigateToScan = false
-  
   var body: some View {
     ZStack {
       // Background that extends to edges
@@ -36,9 +34,8 @@ struct HomeView: View {
               .font(.system(size: 16, weight: .regular))
               .foregroundColor(.white.opacity(0.9))
             
-          Button {
-            navigateToScan = true
-          } label: {
+            // Navigation to ScanView
+            NavigationLink(destination: ScanRouteView()) {
               HStack(spacing: 8) {
                 Image(systemName: "camera.fill")
                   .font(.system(size: 16, weight: .semibold))
@@ -52,11 +49,6 @@ struct HomeView: View {
               .cornerRadius(12)
             }
             .padding(.top, 8)
-          
-          // Navigation to ScanView
-          NavigationLink(isActive: $navigateToScan) {
-            ScanRouteView()
-          } label: { EmptyView() }
           }
           .padding(20)
           .frame(maxWidth: .infinity)
