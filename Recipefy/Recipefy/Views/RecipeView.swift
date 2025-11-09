@@ -9,6 +9,7 @@ import SwiftUI
 
 struct RecipeView: View {
 	@StateObject var controller = RecipeController()
+	let ingredients: [Ingredient]
 
 	var body: some View {
 		NavigationStack {
@@ -52,6 +53,11 @@ struct RecipeView: View {
 			}
 			.animation(.easeInOut, value: controller.currentRecipes?.count ?? 0)
 			.padding(.top, 8)
+			.task {
+				if controller.currentRecipes == nil && !controller.isRetrieving {
+					await controller.getRecipe(ingredients: ingredients)
+				}
+			}
 		}
 	}
 	@ViewBuilder
@@ -183,45 +189,11 @@ private struct LabeledBulletList: View {
 	}
 }
 
-// MARK: - Preview with mock data
-
-#if DEBUG
-struct RecipeView_Previews: PreviewProvider {
-	static var previews: some View {
-		let controller = RecipeController()
-		controller.currentRecipes = [
-			Recipe(
-				recipeID: UUID().uuidString,
-				title: "Lemon Garlic Chicken Pasta",
-				description: "A bright, zesty pasta with silky garlic sauce.",
-				ingredients: ["8 oz spaghetti", "2 tbsp olive oil", "2 cloves garlic", "1 lemon", "1 cup chicken"],
-				steps: ["Boil pasta", "Sauté garlic", "Add chicken and lemon", "Toss with pasta"],
-				calories: 620, servings: 2, cookMin: 25,
-				protein: 32, carbs: 75, fat: 18, fiber: 6
-			),
-			Recipe(
-				recipeID: UUID().uuidString,
-				title: "Tomato Basil Soup",
-				description: "Creamy tomato soup with fresh basil.",
-				ingredients: ["3 cups tomatoes", "1 onion", "2 cups stock", "Basil"],
-				steps: ["Sauté onion", "Simmer tomatoes & stock", "Blend & add basil"],
-				calories: 280, servings: 3, cookMin: 30,
-				protein: 8, carbs: 36, fat: 10, fiber: 5
-			)
-		]
-		return NavigationStack {
-			RecipeView(controller: controller)
-				.preferredColorScheme(.light)
-		}
-	}
-}
-#endif
-
-
-
 #Preview {
 	NavigationStack {
-		RecipeView()
+		RecipeView(ingredients: [
+			Ingredient(id: "1", name: "Chicken", amount: "500g", category: .proteins),
+			Ingredient(id: "2", name: "Rice", amount: "2 cups", category: .grains)
+		])
 	}
 }
-
