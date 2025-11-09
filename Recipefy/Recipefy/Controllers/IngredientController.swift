@@ -45,20 +45,32 @@ final class IngredientController: ObservableObject {
   // MARK: - Public Methods
   
   func analyzeIngredients(imageData: Data, scanId: String) async {
+    await analyzeMultipleImages(imageDataArray: [imageData], scanId: scanId)
+  }
+  
+  func analyzeMultipleImages(imageDataArray: [Data], scanId: String) async {
     isAnalyzing = true
     currentIngredients = nil
     statusText = "Analyzing ingredients with AI..."
     
     do {
-      guard let image = UIImage(data: imageData) else {
-        throw IngredientError.invalidImage
+      var allIngredients: [Ingredient] = []
+      
+      // Analyze each image
+      for (index, imageData) in imageDataArray.enumerated() {
+        statusText = "Analyzing image \(index + 1) of \(imageDataArray.count)..."
+        
+        guard let image = UIImage(data: imageData) else {
+          throw IngredientError.invalidImage
+        }
+        
+        let ingredients = try await geminiService.analyzeIngredients(image: image)
+        allIngredients.append(contentsOf: ingredients)
       }
       
-      let ingredients = try await geminiService.analyzeIngredients(image: image)
-      // Don't set currentIngredients yet - wait until saved with IDs
-      
-      // Automatically save ingredients after analysis
-      await saveIngredients(scanId: scanId, ingredients: ingredients)
+      // Automatically save all ingredients after analysis
+      statusText = "Saving \(allIngredients.count) ingredients..."
+      await saveIngredients(scanId: scanId, ingredients: allIngredients)
       isAnalyzing = false
     } catch {
       currentIngredients = nil

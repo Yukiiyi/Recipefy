@@ -9,12 +9,24 @@ import SwiftUI
 
 struct IngredientListView: View {
   let scanId: String
-  let imageData: Data
+  let imageDataArray: [Data]
   @StateObject private var controller = IngredientController()
   @Environment(\.dismiss) var dismiss
   @State private var showingAddForm = false
   @State private var showingEditForm = false
   @State private var ingredientToEdit: Ingredient?
+  
+  // Convenience init for single image (backward compatibility)
+  init(scanId: String, imageData: Data) {
+    self.scanId = scanId
+    self.imageDataArray = [imageData]
+  }
+  
+  // Primary init for multiple images
+  init(scanId: String, imageDataArray: [Data]) {
+    self.scanId = scanId
+    self.imageDataArray = imageDataArray
+  }
   
   var body: some View {
     VStack(spacing: 0) {
@@ -124,7 +136,7 @@ struct IngredientListView: View {
     }
     .task {
       if controller.currentIngredients == nil && !controller.isAnalyzing {
-        await controller.analyzeIngredients(imageData: imageData, scanId: scanId)
+        await controller.analyzeMultipleImages(imageDataArray: imageDataArray, scanId: scanId)
       }
     }
     .alert("Error", isPresented: .constant(controller.errorMessage != nil)) {
