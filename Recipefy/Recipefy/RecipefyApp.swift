@@ -11,12 +11,18 @@ import SwiftUI
 struct RecipefyApp: App {
   // register app delegate for Firebase setup
   @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+  @StateObject private var authController = AuthController()
 
   var body: some Scene {
     WindowGroup {
       NavigationView {
-        HomeView()
+        if authController.isAuthenticated {
+          HomeView()
+        } else {
+          AuthView()
+        }
       }
+      .environmentObject(authController)
     }
   }
 }

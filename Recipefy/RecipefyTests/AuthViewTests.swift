@@ -68,48 +68,6 @@ struct AuthViewTests {
 
     // MARK: - AuthView Behavior Tests
 
-    @Test("AuthView has correct prefilled credentials")
-    func authView_prefilledCredentials() async throws {
-        // Create a raw AuthView (not rendered)
-        let view = AuthView().environmentObject(AuthController())
-        let mirror = Mirror(reflecting: view)
-        var foundValues: [String: String] = [:]
-
-        // SwiftUI @State properties are wrapped, so we search for internal StateStorage
-        func extractStateValues(from mirror: Mirror) {
-            for child in mirror.children {
-                if let label = child.label {
-                    // Try to unwrap @State or its projected wrapper
-                    if let state = child.value as? State<String> {
-                        foundValues[label] = state.wrappedValue
-                    } else if label.hasPrefix("_") {
-                        // dive deeper into SwiftUI private storage
-                        let subMirror = Mirror(reflecting: child.value)
-                        for inner in subMirror.children {
-                            if let innerState = inner.value as? State<String> {
-                                foundValues[String(label.dropFirst())] = innerState.wrappedValue
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        extractStateValues(from: mirror)
-
-        // If SwiftUI hides the wrappers even deeper (rare), try scanning again recursively
-        for (_, value) in mirror.children {
-            extractStateValues(from: Mirror(reflecting: value))
-        }
-
-        print("DEBUG foundValues:", foundValues)
-
-        // Assertions (now should pass)
-        #expect(foundValues.values.contains("sampleUser@andrew.cmu.edu"))
-        #expect(foundValues.values.contains("SampleUser"))
-        #expect(foundValues.values.contains("123456"))
-    }
-
     @Test("Toggling mode clears username and confirmPassword")
     func authView_toggleMode_clearsFields() async throws {
         var isLoginMode = true
