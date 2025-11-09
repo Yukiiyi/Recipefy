@@ -58,30 +58,59 @@ class GeminiService {
     let decoder = JSONDecoder()
     return try decoder.decode([Ingredient].self, from: data)
   }
-}
-
-struct Ingredient: Codable, Identifiable {
-  var id: String? // Firestore document ID
-  let name: String
-  let amount: String
-  let category: String
-  
-  func toDictionary() -> [String: String] {
-    return [
-      "name": name,
-      "amount": amount,
-      "category": category
-    ]
-  }
-  
-  static func from(dictionary: [String: String]) -> Ingredient? {
-    guard let name = dictionary["name"],
-          let amount = dictionary["amount"],
-          let category = dictionary["category"] else {
-      return nil
-    }
-    return Ingredient(id: nil, name: name, amount: amount, category: category)
-  }
+	
+	func getRecipe(ingredients: [String]) async throws -> [Recipe] {
+		let prompt = """
+		This is a list of the available ingredients: \(ingredients)
+		Provide 5 unique recipes that can be made using only the amount of ingredients listed. 
+		For each recipe, provide the name, calories, serving size, list of preparation steps (e.g. ["Boil water and cook pasta according to package directions", "Heat olive oil in a large pan over medium heat", ...]) , preparation time in minutes,  list of ingredients used (e.g. ["1 cup tomatoes", "1 lb Chicken Breast", ...]) , nutrition information in a map which contains the amount of carbs, fat, fiber, protein, and a description.
+		
+		Return the result as a JSON array with this exact format:
+		[
+			{
+				"title": "recipe name",
+				"servings": serving_size_as_an_integer,
+				"calories": calories_as_an_integer,
+				"cookMin": preparation_time_in_minutes_as_an_integer,
+				"ingredients": ["list", "of", "ingredients"],
+				"nutrition": {
+					"carbs": carbs_as_an_integer, 
+					"fat": fat_as_an_integer, 
+					"fiber": fiber_as_an_integer, 
+					"protein": protein_as_an_integer, 
+					"description": "description text"
+				},
+				"steps": ["list", "of", "preparation", "steps"]
+			}
+		]
+		
+		All fields with the tag "_as_an_integer" should be of type Integer.
+		Return ONLY the JSON array, no additional text.
+		"""
+		
+		let response = try await model.generateContent(prompt)
+		guard let text = response.text else {
+			throw GeminiError.noResponse
+		}
+		
+		return try parseRecipeResponse(from: text)
+	}
+	
+	private func parseRecipeResponse(from jsonString: String) throws -> [Recipe] {
+		// Clean JSON response (remove markdown code blocks like ingredients parsing does)
+		let cleanJson = jsonString
+			.replacingOccurrences(of: "```json", with: "")
+			.replacingOccurrences(of: "```", with: "")
+			.trimmingCharacters(in: .whitespacesAndNewlines)
+		
+		guard let data = cleanJson.data(using: .utf8) else {
+			throw GeminiError.parsingError
+		}
+		
+		let rawRecipes = try JSONDecoder().decode([RawRecipe].self, from: data)
+		let recipes = rawRecipes.map(Recipe.init)
+		return recipes
+	}
 }
 
 enum GeminiError: LocalizedError {
@@ -100,3 +129,4 @@ enum GeminiError: LocalizedError {
     }
   }
 }
+

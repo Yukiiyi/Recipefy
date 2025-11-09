@@ -17,25 +17,60 @@ final class IngredientController: ObservableObject {
   @Published var currentIngredients: [Ingredient]?
   @Published var isAnalyzing = false
   @Published var saveSuccess = false
+  @Published var errorMessage: String?
   
   private let geminiService = GeminiService()
   private let db = Firestore.firestore()
   
+  // MARK: - Helper Methods
+  
+  /// Creates Firestore-compatible ingredient data dictionary
+  private func createIngredientData(
+    name: String,
+    amount: String,
+    category: IngredientCategory,
+    includeTimestamp: Bool = true
+  ) -> [String: Any] {
+    var data: [String: Any] = [
+      "name": name,
+      "amount": amount,
+      "category": category.rawValue
+    ]
+    if includeTimestamp {
+      data["createdAt"] = Timestamp(date: Date())
+    }
+    return data
+  }
+  
+  // MARK: - Public Methods
+  
   func analyzeIngredients(imageData: Data, scanId: String) async {
+    await analyzeMultipleImages(imageDataArray: [imageData], scanId: scanId)
+  }
+  
+  func analyzeMultipleImages(imageDataArray: [Data], scanId: String) async {
     isAnalyzing = true
     currentIngredients = nil
     statusText = "Analyzing ingredients with AI..."
     
     do {
-      guard let image = UIImage(data: imageData) else {
-        throw IngredientError.invalidImage
+      var allIngredients: [Ingredient] = []
+      
+      // Analyze each image
+      for (index, imageData) in imageDataArray.enumerated() {
+        statusText = "Analyzing image \(index + 1) of \(imageDataArray.count)..."
+        
+        guard let image = UIImage(data: imageData) else {
+          throw IngredientError.invalidImage
+        }
+        
+        let ingredients = try await geminiService.analyzeIngredients(image: image)
+        allIngredients.append(contentsOf: ingredients)
       }
       
-      let ingredients = try await geminiService.analyzeIngredients(image: image)
-      // Don't set currentIngredients yet - wait until saved with IDs
-      
-      // Automatically save ingredients after analysis
-      await saveIngredients(scanId: scanId, ingredients: ingredients)
+      // Automatically save all ingredients after analysis
+      statusText = "Saving \(allIngredients.count) ingredients..."
+      await saveIngredients(scanId: scanId, ingredients: allIngredients)
       isAnalyzing = false
     } catch {
       currentIngredients = nil
@@ -52,12 +87,11 @@ final class IngredientController: ObservableObject {
       let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
       
       for (index, ingredient) in ingredientsWithIds.enumerated() {
-        let ingredientData: [String: Any] = [
-          "name": ingredient.name,
-          "amount": ingredient.amount,
-          "category": ingredient.category,
-          "createdAt": Timestamp(date: Date())
-        ]
+        let ingredientData = createIngredientData(
+          name: ingredient.name,
+          amount: ingredient.amount,
+          category: ingredient.category
+        )
         
         let docRef = try await ingredientsCollection.addDocument(data: ingredientData)
         ingredientsWithIds[index].id = docRef.documentID
@@ -74,7 +108,7 @@ final class IngredientController: ObservableObject {
   
   func deleteIngredient(scanId: String, ingredient: Ingredient) async {
     guard let ingredientId = ingredient.id else {
-      statusText = "Cannot delete: ingredient has no ID"
+      errorMessage = "Cannot delete: ingredient has no ID"
       return
     }
     
@@ -89,21 +123,15 @@ final class IngredientController: ObservableObject {
       // Remove from local state
       currentIngredients?.removeAll { $0.id == ingredientId }
     } catch {
-      statusText = "Delete error: \(error.localizedDescription)"
+      errorMessage = "Failed to delete ingredient: \(error.localizedDescription)"
     }
   }
   
-  func addIngredient(scanId: String, name: String, amount: String, category: String) async {
+  func addIngredient(scanId: String, name: String, amount: String, category: IngredientCategory) async {
     do {
       let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
       
-      let ingredientData: [String: Any] = [
-        "name": name,
-        "amount": amount,
-        "category": category,
-        "createdAt": Timestamp(date: Date())
-      ]
-      
+      let ingredientData = createIngredientData(name: name, amount: amount, category: category)
       let docRef = try await ingredientsCollection.addDocument(data: ingredientData)
       
       // Create new ingredient with ID and add to top of list
@@ -114,27 +142,22 @@ final class IngredientController: ObservableObject {
         currentIngredients = [newIngredient]
       }
     } catch {
-      statusText = "Add error: \(error.localizedDescription)"
+      errorMessage = "Failed to add ingredient: \(error.localizedDescription)"
       print("Error adding ingredient: \(error)")
     }
   }
   
-  func updateIngredient(scanId: String, ingredient: Ingredient, name: String, amount: String, category: String) async {
+  func updateIngredient(scanId: String, ingredient: Ingredient, name: String, amount: String, category: IngredientCategory) async {
     guard let ingredientId = ingredient.id else {
-      statusText = "Cannot update: ingredient has no ID"
+      errorMessage = "Cannot update: ingredient has no ID"
       return
     }
     
     do {
       let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
       
-      let ingredientData: [String: Any] = [
-        "name": name,
-        "amount": amount,
-        "category": category,
-        "createdAt": ingredient.id != nil ? Timestamp(date: Date()) : Timestamp(date: Date()) // Keep original if exists
-      ]
-      
+      // Don't update createdAt - it should remain the original timestamp
+      let ingredientData = createIngredientData(name: name, amount: amount, category: category, includeTimestamp: false)
       try await ingredientsCollection.document(ingredientId).setData(ingredientData, merge: true)
       
       // Update in local state
@@ -142,7 +165,7 @@ final class IngredientController: ObservableObject {
         currentIngredients?[index] = Ingredient(id: ingredientId, name: name, amount: amount, category: category)
       }
     } catch {
-      statusText = "Update error: \(error.localizedDescription)"
+      errorMessage = "Failed to update ingredient: \(error.localizedDescription)"
       print("Error updating ingredient: \(error)")
     }
   }

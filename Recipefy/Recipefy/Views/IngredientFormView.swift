@@ -15,12 +15,10 @@ struct IngredientFormView: View {
   
   @State private var name: String
   @State private var amount: String
-  @State private var category: String
+  @State private var category: IngredientCategory
   @State private var isSaving = false
   @State private var showingDeleteAlert = false
   @State private var shouldDismiss = false
-  
-  let categories = ["Vegetables", "Proteins", "Grains", "Dairy", "Seasonings", "Oil", "Other"]
   
   // Computed property to determine if we're editing
   private var isEditing: Bool {
@@ -36,7 +34,7 @@ struct IngredientFormView: View {
     // Pre-fill with existing values if editing
     _name = State(initialValue: ingredient?.name ?? "")
     _amount = State(initialValue: ingredient?.amount ?? "")
-    _category = State(initialValue: ingredient?.category ?? "Vegetables")
+    _category = State(initialValue: ingredient?.category ?? .vegetables)
   }
   
   var body: some View {
@@ -55,15 +53,15 @@ struct IngredientFormView: View {
         Section("Category") {
           VStack(spacing: 10) {
             HStack(spacing: 10) {
-              categoryButton("Vegetables")
-              categoryButton("Proteins")
-              categoryButton("Grains")
+              categoryButton(.vegetables)
+              categoryButton(.proteins)
+              categoryButton(.grains)
             }
             HStack(spacing: 8) {
-              categoryButton("Dairy")
-              categoryButton("Seasonings")
-              categoryButton("Oil")
-              categoryButton("Other")
+              categoryButton(.dairy)
+              categoryButton(.seasonings)
+              categoryButton(.oil)
+              categoryButton(.other)
             }
           }
           .padding(.vertical, 8)
@@ -130,15 +128,24 @@ struct IngredientFormView: View {
           dismiss()
         }
       }
+      .alert("Error", isPresented: .constant(controller.errorMessage != nil)) {
+        Button("OK") {
+          controller.errorMessage = nil
+        }
+      } message: {
+        if let errorMessage = controller.errorMessage {
+          Text(errorMessage)
+        }
+      }
     }
   }
   
   // helper function to create category buttons
-  private func categoryButton(_ cat: String) -> some View {
+  private func categoryButton(_ cat: IngredientCategory) -> some View {
     Button(action: {
       category = cat
     }) {
-      Text(cat)
+      Text(cat.rawValue)
         .font(.subheadline)
         .fontWeight(.medium)
         .foregroundStyle(category == cat ? .white : .primary)
@@ -166,7 +173,7 @@ struct IngredientFormView: View {
       id: "preview-ingredient-id",
       name: "Chicken Breast",
       amount: "500 g",
-      category: "Proteins"
+      category: .proteins
     )
   )
 }
