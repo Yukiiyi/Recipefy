@@ -9,7 +9,7 @@ import SwiftUI
 import AuthenticationServices
 
 struct AuthView: View {
-    @StateObject private var controller = AuthController()
+    @EnvironmentObject var controller: AuthController
     @State private var isLoginMode = false
     @State private var username = ""
     @State private var email = "sampleUser@andrew.cmu.edu"
@@ -197,4 +197,5 @@ private struct LabeledField<Content: View>: View {
 
 #Preview {
     AuthView()
+        .environmentObject(AuthController())
 }
