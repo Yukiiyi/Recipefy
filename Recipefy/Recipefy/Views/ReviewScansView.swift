@@ -171,7 +171,7 @@ struct ReviewScansView: View {
   // Destination View
   @ViewBuilder
   private var destinationView: some View {
-    if let scanId = controller.lastScanId, !capturedImageData.isEmpty {
+    if let scanId = controller.currentScanId, !capturedImageData.isEmpty {
       IngredientListView(scanId: scanId, imageDataArray: capturedImageData)
     } else {
       EmptyView()
@@ -194,7 +194,7 @@ struct ReviewScansView: View {
       
       isProcessing = false
       
-      if controller.lastScanId != nil {
+      if controller.currentScanId != nil {
         navigateToIngredients = true
       }
     }

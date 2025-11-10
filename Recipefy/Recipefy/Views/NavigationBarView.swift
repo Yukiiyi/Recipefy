@@ -45,6 +45,18 @@ struct NavigationBarView: View {
                     .navigationTitle("My Ingredients")
                 }
             }
+            .task {
+                // Load ingredients from Firestore only if needed
+                // Don't load if we already have ingredients for this scan
+                if let scanId = scanController.currentScanId {
+                    let needsLoad = ingredientController.currentIngredients == nil || 
+                                    ingredientController.currentScanId != scanId
+                    
+                    if needsLoad && !ingredientController.isAnalyzing {
+                        await ingredientController.loadIngredients(scanId: scanId)
+                    }
+                }
+            }
             .tabItem {
                 Label("Ingredients", systemImage: "list.bullet")
             }
