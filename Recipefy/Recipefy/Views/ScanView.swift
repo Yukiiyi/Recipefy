@@ -168,6 +168,7 @@ struct ScanView: View {
           .foregroundStyle(.white)
           .frame(width: 80)
         }
+        .buttonStyle(.plain)
         .disabled(capturedImages.count >= maxPhotos)
         .opacity(capturedImages.count >= maxPhotos ? 0.5 : 1)
         .photosPicker(
@@ -211,6 +212,7 @@ struct ScanView: View {
           .foregroundStyle(.white)
           .frame(width: 80)
         }
+        .buttonStyle(.plain)
       }
       .padding(.horizontal, 20)
       .padding(.vertical, 20)
