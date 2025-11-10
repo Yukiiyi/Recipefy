@@ -74,6 +74,7 @@ struct ReviewScansView: View {
               .stroke(Color.green, lineWidth: 2)
           )
         }
+        .buttonStyle(.plain)
         .disabled(capturedImages.count >= maxPhotos)
         .opacity(capturedImages.count >= maxPhotos ? 0.5 : 1)
         
@@ -91,6 +92,7 @@ struct ReviewScansView: View {
           .background(Color.green)
           .cornerRadius(12)
         }
+        .buttonStyle(.plain)
         .disabled(capturedImages.isEmpty || isProcessing)
       }
       .padding()
@@ -125,6 +127,7 @@ struct ReviewScansView: View {
             .font(.title2)
             .foregroundStyle(.red)
         }
+        .buttonStyle(.plain)
       }
       
       Image(uiImage: image)

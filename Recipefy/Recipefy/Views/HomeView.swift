@@ -51,6 +51,7 @@ struct HomeView: View {
               .background(Color.white)
               .cornerRadius(12)
             }
+            .buttonStyle(.plain)
             .padding(.top, 8)
           }
           .padding(20)
@@ -75,6 +76,7 @@ struct HomeView: View {
               subtitle: "View and Manage your Pantry"
             )
           }
+          .buttonStyle(.plain)
             
           // Saved Recipes Row
           NavigationLink(destination: SavedRecipesPlaceholderView()) {
@@ -84,6 +86,7 @@ struct HomeView: View {
               subtitle: "Your Favorite Recipes"
             )
           }
+          .buttonStyle(.plain)
             
           // Browse Recipes Row
           NavigationLink(destination: BrowseRecipesPlaceholderView()) {
@@ -93,6 +96,7 @@ struct HomeView: View {
               subtitle: "Explore new Recipe"
             )
           }
+          .buttonStyle(.plain)
           }
           .padding(.top, 8)
           
