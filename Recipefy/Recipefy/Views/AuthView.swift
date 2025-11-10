@@ -28,7 +28,7 @@ struct AuthView: View {
                             Circle()
                                 .fill(Color(red: 0.36, green: 0.72, blue: 0.36).opacity(0.2))
                                 .frame(width: 80, height: 80)
-                            Image(systemName: "pot.fill")
+                            Image(systemName: "fork.knife.circle.fill")
                                 .font(.system(size: 40))
                                 .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
                         }

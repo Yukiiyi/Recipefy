@@ -83,12 +83,18 @@ struct NavigationBarView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .navigationTitle("Recipes")
                     } else if let recipes = recipeController.currentRecipes, !recipes.isEmpty {
-                        // Show recipe cards
+                        // Show recipe cards (matching RecipeView design)
                         VStack(spacing: 12) {
-                            Text("Your Recipes")
-                                .font(.title2).bold()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal)
+                            // Header with count (matching RecipeView)
+                            HStack {
+                                Text("Recipe Suggestions")
+                                    .font(.title2).bold()
+                                Spacer()
+                                Text("\(recipes.count)")
+                                    .font(.subheadline.monospacedDigit())
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.horizontal, 16)
                             
                             TabView {
                                 ForEach(recipes, id: \.recipeID) { recipe in
@@ -100,6 +106,7 @@ struct NavigationBarView: View {
                             .tabViewStyle(.page(indexDisplayMode: .automatic))
                             .indexViewStyle(.page(backgroundDisplayMode: .always))
                         }
+                        .padding(.top, 8)
                         .navigationTitle("Recipes")
                     } else {
                         EmptyStateView(
