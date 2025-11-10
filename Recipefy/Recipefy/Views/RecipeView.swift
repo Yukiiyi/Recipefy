@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct RecipeView: View {
-	@StateObject var controller = RecipeController()
+	@EnvironmentObject var controller: RecipeController
 	let ingredients: [Ingredient]
+	let scanId: String?
 
 	var body: some View {
 		NavigationStack {
@@ -53,9 +54,11 @@ struct RecipeView: View {
 			}
 			.animation(.easeInOut, value: controller.currentRecipes?.count ?? 0)
 			.padding(.top, 8)
-			.task {
-				if controller.currentRecipes == nil && !controller.isRetrieving {
-					await controller.getRecipe(ingredients: ingredients)
+			.task(id: scanId) {
+				// Only runs when scanId changes (or first time)
+				// Generate recipes if we don't have any for this scan
+				if controller.lastGeneratedScanId != scanId && !controller.isRetrieving {
+					await controller.getRecipe(ingredients: ingredients, sourceScanId: scanId)
 				}
 			}
 		}
@@ -76,7 +79,7 @@ struct RecipeView: View {
 
 // MARK: - Recipe Card
 
-private struct RecipeCard: View {
+struct RecipeCard: View {
 		let recipe: Recipe
 
 		var body: some View {
@@ -191,9 +194,13 @@ private struct LabeledBulletList: View {
 
 #Preview {
 	NavigationStack {
-		RecipeView(ingredients: [
-			Ingredient(id: "1", name: "Chicken", amount: "500g", category: .proteins),
-			Ingredient(id: "2", name: "Rice", amount: "2 cups", category: .grains)
-		])
+		RecipeView(
+			ingredients: [
+				Ingredient(id: "1", name: "Chicken", amount: "500g", category: .proteins),
+				Ingredient(id: "2", name: "Rice", amount: "2 cups", category: .grains)
+			],
+			scanId: "preview-scan-123"
+		)
+		.environmentObject(RecipeController())
 	}
 }

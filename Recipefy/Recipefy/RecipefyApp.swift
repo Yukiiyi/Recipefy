@@ -11,18 +11,30 @@ import SwiftUI
 struct RecipefyApp: App {
   // register app delegate for Firebase setup
   @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+  
+  // Shared controllers for entire app
   @StateObject private var authController = AuthController()
+  @StateObject private var scanController = ScanController(
+    storage: FirebaseStorageService(),
+    scans: FirebaseScanRepository()
+  )
+  @StateObject private var ingredientController = IngredientController()
+  @StateObject private var recipeController = RecipeController()
 
   var body: some Scene {
     WindowGroup {
-      NavigationView {
-        if authController.isAuthenticated {
-          HomeView()
-        } else {
+      if authController.isAuthenticated {
+        NavigationBarView()
+          .environmentObject(authController)
+          .environmentObject(scanController)
+          .environmentObject(ingredientController)
+          .environmentObject(recipeController)
+      } else {
+        NavigationView {
           AuthView()
         }
+        .environmentObject(authController)
       }
-      .environmentObject(authController)
     }
   }
 }

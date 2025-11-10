@@ -10,7 +10,7 @@ import SwiftUI
 struct IngredientListView: View {
   let scanId: String
   let imageDataArray: [Data]
-  @StateObject private var controller = IngredientController()
+  @EnvironmentObject var controller: IngredientController
   @Environment(\.dismiss) var dismiss
   @State private var showingAddForm = false
   @State private var showingEditForm = false
@@ -96,7 +96,7 @@ struct IngredientListView: View {
           .listStyle(.insetGrouped)
           
           // Find Recipes Button
-          NavigationLink(destination: RecipeView(ingredients: ingredients)) {
+          NavigationLink(destination: RecipeView(ingredients: ingredients, scanId: scanId)) {
             HStack {
               Image(systemName: "magnifyingglass")
                 .font(.title3)
@@ -134,8 +134,9 @@ struct IngredientListView: View {
         IngredientFormView(controller: controller, scanId: scanId, ingredient: ingredient)
       }
     }
-    .task {
-      if controller.currentIngredients == nil && !controller.isAnalyzing {
+    .task(id: scanId) {
+      // Only analyze if scanId changed (new scan with different ingredients)
+      if controller.currentScanId != scanId && !controller.isAnalyzing {
         await controller.analyzeMultipleImages(imageDataArray: imageDataArray, scanId: scanId)
       }
     }

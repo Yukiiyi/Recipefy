@@ -25,21 +25,21 @@ struct RecipeTests {
 				#expect(sut.saveSuccess == false)
 		}
 
-		@Test
-		func saveRecipe_whenNoCurrentRecipes_setsMessageAndDoesNotToggleSaving() async throws {
-				let sut = RecipeController()
+	@Test
+	func saveRecipes_whenNoCurrentRecipes_setsMessageAndDoesNotToggleSaving() async throws {
+			let sut = RecipeController()
 
-				// Precondition
-				#expect(sut.currentRecipes == nil)
+			// Precondition
+			#expect(sut.currentRecipes == nil)
 
-				// Act
-				try await sut.saveRecipe()
+			// Act
+			await sut.saveRecipes()
 
-				// Assert
-				#expect(sut.statusText == "No recipes to save")
-				#expect(sut.isSaving == false)
-				#expect(sut.saveSuccess == false)
-		}
+			// Assert
+			#expect(sut.statusText == "No recipes to save")
+			#expect(sut.isSaving == false)
+			#expect(sut.saveSuccess == false)
+	}
 
 		// MARK: - Models (pure mapping tests, no Firebase/Gemini needed)
 

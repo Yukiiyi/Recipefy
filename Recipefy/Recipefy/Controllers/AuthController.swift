@@ -65,7 +65,7 @@ final class AuthController: ObservableObject {
         isLoading = true
         
         switch result {
-        case .success(let authorization):
+        case .success(_):
             // Simulate network delay
             try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
             

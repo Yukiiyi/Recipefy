@@ -10,7 +10,7 @@ import AuthenticationServices
 
 struct AuthView: View {
     @EnvironmentObject var controller: AuthController
-    @State private var isLoginMode = false
+    @State private var isLoginMode = true
     @State private var username = ""
     @State private var email = "sampleUser@andrew.cmu.edu"
     @State private var password = "123456"
@@ -28,7 +28,7 @@ struct AuthView: View {
                             Circle()
                                 .fill(Color(red: 0.36, green: 0.72, blue: 0.36).opacity(0.2))
                                 .frame(width: 80, height: 80)
-                            Image(systemName: "pot.fill")
+                            Image(systemName: "fork.knife.circle.fill")
                                 .font(.system(size: 40))
                                 .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
                         }
@@ -77,6 +77,7 @@ struct AuthView: View {
                         .contentShape(Rectangle())
                         .accessibilityLabel(isLoginMode ? "Sign in with Google" : "Sign up with Google")
                     }
+                    .buttonStyle(.plain)
                     .disabled(controller.isLoading)
 
 
@@ -157,6 +158,7 @@ struct AuthView: View {
                                 .background(Color(red: 0.36, green: 0.72, blue: 0.36))
                                 .cornerRadius(12)
                         }
+                        .buttonStyle(.plain)
                         .disabled(controller.isLoading || email.isEmpty || password.isEmpty || (!isLoginMode && (username.isEmpty || confirmPassword.isEmpty)))
                         .opacity((email.isEmpty || password.isEmpty || (!isLoginMode && (username.isEmpty || confirmPassword.isEmpty))) ? 0.6 : 1.0)
                     }
