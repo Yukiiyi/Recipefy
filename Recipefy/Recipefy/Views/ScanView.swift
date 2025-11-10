@@ -75,7 +75,9 @@ struct ScanView: View {
     }
     .onChange(of: cameraManager.capturedImage) { _, newImage in
       if let image = newImage, capturedImages.count < maxPhotos {
-        addCapturedImage(image)
+        Task {
+          await addCapturedImage(image)
+        }
         cameraManager.capturedImage = nil
       }
       }
@@ -85,8 +87,8 @@ struct ScanView: View {
               let data = try? await item.loadTransferable(type: Data.self),
               let image = UIImage(data: data),
               capturedImages.count < maxPhotos else { return }
-        addCapturedImage(image)
-        pickerItem = nil
+          await addCapturedImage(image)
+          pickerItem = nil
       }
     }
     .sheet(isPresented: $showingInstructions) {
@@ -113,6 +115,7 @@ struct ScanView: View {
           .padding(10)
           .background(Circle().fill(Color.black.opacity(0.5)))
       }
+      .buttonStyle(.plain)
       
       Spacer()
       
@@ -125,6 +128,7 @@ struct ScanView: View {
           .padding(10)
           .background(Circle().fill(Color.black.opacity(0.5)))
       }
+      .buttonStyle(.plain)
     }
   }
   
@@ -188,6 +192,7 @@ struct ScanView: View {
               .frame(width: 60, height: 60)
           }
         }
+        .buttonStyle(.plain)
         .disabled(capturedImages.count >= maxPhotos || !cameraManager.isAuthorized)
         .opacity(capturedImages.count >= maxPhotos ? 0.5 : 1)
         
@@ -317,16 +322,22 @@ struct ScanView: View {
   }
   
   // Helper Functions
-  private func addCapturedImage(_ image: UIImage) {
+  private func addCapturedImage(_ image: UIImage) async {
     guard capturedImages.count < maxPhotos else { return }
-    capturedImages.append(image)
     
-    // Convert to data for upload
-    if let data = image.jpegData(compressionQuality: 0.75) {
-      capturedImageData.append(data)
+    // Convert to data on background thread (this is the slow part)
+    let imageData = await Task.detached {
+      image.jpegData(compressionQuality: 0.75)
+    }.value
+    
+    // Update UI on main thread
+    await MainActor.run {
+      capturedImages.append(image)
+      if let data = imageData {
+        capturedImageData.append(data)
+      }
+      // Navigate to review scans screen
+      navigateToReviewScans = true
     }
-    
-    // Navigate to review scans screen
-    navigateToReviewScans = true
   }
 }

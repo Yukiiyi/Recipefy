@@ -47,6 +47,7 @@ struct SettingsView: View {
                     .background(Color.red)
                     .cornerRadius(12)
             }
+            .buttonStyle(.plain)
             .padding(.horizontal, 32)
             .padding(.bottom, 32)
         }
