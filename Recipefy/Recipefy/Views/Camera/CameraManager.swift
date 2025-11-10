@@ -83,12 +83,7 @@ class CameraManager: NSObject, ObservableObject {
       }
       
       session.commitConfiguration()
-      
-      // Start session on background thread
-      let captureSession = session
-      DispatchQueue.global(qos: .userInitiated).async {
-        captureSession.startRunning()
-      }
+      session.startRunning()
     } catch {
       print("Camera setup error: \(error.localizedDescription)")
       isCameraUnavailable = true
@@ -108,11 +103,8 @@ class CameraManager: NSObject, ObservableObject {
   }
   
   func stopSession() {
-    let captureSession = session
-    if captureSession.isRunning {
-      DispatchQueue.global(qos: .userInitiated).async {
-        captureSession.stopRunning()
-      }
+    if session.isRunning {
+      session.stopRunning()
     }
   }
 }
