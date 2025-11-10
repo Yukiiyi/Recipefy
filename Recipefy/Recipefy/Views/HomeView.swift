@@ -162,13 +162,11 @@ struct QuickActionRow: View {
 
 // MARK: - Inline placeholder screens (kept private to this file)
 
-// Dedicated route that constructs Scan dependencies at the destination,
-// keeping Home free of controller logic
+// Dedicated route that uses shared controller from environment
 private struct ScanRouteView: View {
+  @EnvironmentObject var controller: ScanController
+  
   var body: some View {
-    let storage = FirebaseStorageService()
-    let scans = FirebaseScanRepository()
-    let controller = ScanController(storage: storage, scans: scans)
     ScanView(controller: controller)
   }
 }
