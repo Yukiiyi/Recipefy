@@ -92,17 +92,13 @@ struct ScanView: View {
     .sheet(isPresented: $showingInstructions) {
       instructionsSheet
     }
-    .background(
-      NavigationLink(
-        destination: ReviewScansView(
-          capturedImages: $capturedImages,
-          capturedImageData: $capturedImageData,
-          controller: controller
-        ),
-        isActive: $navigateToReviewScans,
-        label: { EmptyView() }
+    .navigationDestination(isPresented: $navigateToReviewScans) {
+      ReviewScansView(
+        capturedImages: $capturedImages,
+        capturedImageData: $capturedImageData,
+        controller: controller
       )
-    )
+    }
   }
   
   // Top Navigation Bar

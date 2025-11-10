@@ -103,14 +103,9 @@ struct ReviewScansView: View {
         processingOverlay
       }
     }
-    .background(
-      NavigationLink(
-        destination: destinationView,
-        isActive: $navigateToIngredients,
-        label: { EmptyView() }
-      )
-      .hidden()
-    )
+    .navigationDestination(isPresented: $navigateToIngredients) {
+      destinationView
+    }
   }
   
   // Photo Card

@@ -52,11 +52,6 @@ struct HomeView: View {
               .cornerRadius(12)
             }
             .padding(.top, 8)
-          
-          // Navigation to ScanView
-          NavigationLink(isActive: $navigateToScan) {
-            ScanRouteView()
-          } label: { EmptyView() }
           }
           .padding(20)
           .frame(maxWidth: .infinity)
@@ -108,6 +103,9 @@ struct HomeView: View {
       }
     }
     .navigationBarHidden(true)
+    .navigationDestination(isPresented: $navigateToScan) {
+      ScanRouteView()
+    }
   }
 }
 
