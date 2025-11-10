@@ -51,12 +51,8 @@ struct HomeView: View {
               .background(Color.white)
               .cornerRadius(12)
             }
+            .buttonStyle(.plain)
             .padding(.top, 8)
-          
-          // Navigation to ScanView
-          NavigationLink(isActive: $navigateToScan) {
-            ScanRouteView()
-          } label: { EmptyView() }
           }
           .padding(20)
           .frame(maxWidth: .infinity)
@@ -73,13 +69,14 @@ struct HomeView: View {
               .padding(.horizontal)
             
           // My Ingredients Row
-          NavigationLink(destination: PantryPlaceholderView()) {
+          NavigationLink(destination: MyIngredientsRouteView()) {
             QuickActionRow(
               icon: "list.bullet.rectangle",
               title: "My Ingredients",
               subtitle: "View and Manage your Pantry"
             )
           }
+          .buttonStyle(.plain)
             
           // Saved Recipes Row
           NavigationLink(destination: SavedRecipesPlaceholderView()) {
@@ -89,15 +86,17 @@ struct HomeView: View {
               subtitle: "Your Favorite Recipes"
             )
           }
+          .buttonStyle(.plain)
             
           // Browse Recipes Row
-          NavigationLink(destination: BrowseRecipesPlaceholderView()) {
+          NavigationLink(destination: BrowseRecipesRouteView()) {
             QuickActionRow(
               icon: "fork.knife",
               title: "Browse Recipes",
               subtitle: "Explore new Recipe"
             )
           }
+          .buttonStyle(.plain)
           }
           .padding(.top, 8)
           
@@ -108,6 +107,9 @@ struct HomeView: View {
       }
     }
     .navigationBarHidden(true)
+    .navigationDestination(isPresented: $navigateToScan) {
+      ScanRouteView()
+    }
   }
 }
 
@@ -162,27 +164,51 @@ struct QuickActionRow: View {
 
 // MARK: - Inline placeholder screens (kept private to this file)
 
-// Dedicated route that constructs Scan dependencies at the destination,
-// keeping Home free of controller logic
+// Dedicated route that uses shared controller from environment
 private struct ScanRouteView: View {
+  @EnvironmentObject var controller: ScanController
+  
   var body: some View {
-    let storage = FirebaseStorageService()
-    let scans = FirebaseScanRepository()
-    let controller = ScanController(storage: storage, scans: scans)
     ScanView(controller: controller)
   }
 }
 
-private struct PantryPlaceholderView: View {
+// Route view for My Ingredients that uses shared controllers from environment
+private struct MyIngredientsRouteView: View {
+  @EnvironmentObject var scanController: ScanController
+  @EnvironmentObject var ingredientController: IngredientController
+  
   var body: some View {
-    VStack(spacing: 16) {
-      Text("My Ingredients").font(.title).bold()
-      Text("This is a placeholder pantry screen.")
-        .foregroundStyle(.secondary)
-      Spacer()
+    Group {
+      if let ingredients = ingredientController.currentIngredients,
+         !ingredients.isEmpty,
+         let scanId = scanController.currentScanId {
+        IngredientListView(
+          scanId: scanId,
+          imageDataArray: scanController.currentImageData ?? []
+        )
+      } else {
+        EmptyStateView(
+          icon: "camera.fill",
+          title: "No Ingredients Yet",
+          message: "Scan ingredients to get started",
+          buttonText: nil,
+          buttonAction: nil
+        )
+      }
     }
-    .padding()
     .navigationTitle("My Ingredients")
+    .task {
+      // Load ingredients from Firestore if needed
+      if let scanId = scanController.currentScanId {
+        let needsLoad = ingredientController.currentIngredients == nil || 
+                        ingredientController.currentScanId != scanId
+        
+        if needsLoad && !ingredientController.isAnalyzing {
+          await ingredientController.loadIngredients(scanId: scanId)
+        }
+      }
+    }
   }
 }
 
@@ -199,15 +225,60 @@ private struct SavedRecipesPlaceholderView: View {
   }
 }
 
-private struct BrowseRecipesPlaceholderView: View {
+// Route view for Browse Recipes that uses shared controller from environment
+private struct BrowseRecipesRouteView: View {
+  @EnvironmentObject var recipeController: RecipeController
+  
   var body: some View {
-    VStack(spacing: 16) {
-      Text("Browse Recipes").font(.title).bold()
-      Text("This is a placeholder browse screen.")
-        .foregroundStyle(.secondary)
-      Spacer()
+    Group {
+      if recipeController.isRetrieving {
+        VStack {
+          ProgressView()
+          Text("Loading recipes...")
+            .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else if let recipes = recipeController.currentRecipes, !recipes.isEmpty {
+        // Show recipe cards
+        VStack(spacing: 12) {
+          // Header with count
+          HStack {
+            Text("Recipe Suggestions")
+              .font(.title2).bold()
+            Spacer()
+            Text("\(recipes.count)")
+              .font(.subheadline.monospacedDigit())
+              .foregroundColor(.secondary)
+          }
+          .padding(.horizontal, 16)
+          
+          TabView {
+            ForEach(recipes, id: \.recipeID) { recipe in
+              RecipeCard(recipe: recipe)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+          }
+          .tabViewStyle(.page(indexDisplayMode: .automatic))
+          .indexViewStyle(.page(backgroundDisplayMode: .always))
+        }
+        .padding(.top, 8)
+      } else {
+        EmptyStateView(
+          icon: "fork.knife",
+          title: "No Recipes Yet",
+          message: "Generate recipes from your scanned ingredients",
+          buttonText: nil,
+          buttonAction: nil
+        )
+      }
     }
-    .padding()
-    .navigationTitle("Browse")
+    .navigationTitle("Recipes")
+    .task {
+      // Load recipes from Firestore if needed
+      if recipeController.currentRecipes == nil && !recipeController.isRetrieving {
+        await recipeController.loadRecipes()
+      }
+    }
   }
 }

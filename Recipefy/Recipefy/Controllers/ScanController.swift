@@ -13,7 +13,8 @@ import UIKit
 @MainActor
 final class ScanController: ObservableObject {
   @Published var statusText = "Idle"
-  @Published var lastScanId: String?
+  @Published var currentScanId: String?
+  @Published var currentImageData: [Data]?
 
   private let storage: StorageService
   private let scans: ScanRepository
@@ -51,7 +52,8 @@ final class ScanController: ObservableObject {
       statusText = "Writing Firestore doc..."
       let id = try await scans.createScan(userId: uid, imagePaths: uploadedPaths)
 
-      lastScanId = id
+      currentScanId = id
+      currentImageData = imageDataArray
       statusText = "Upload complete (scanId: \(id), \(uploadedPaths.count) images)"
     } catch {
       statusText = "Error: \(error.localizedDescription)"

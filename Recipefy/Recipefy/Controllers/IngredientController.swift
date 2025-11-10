@@ -18,6 +18,7 @@ final class IngredientController: ObservableObject {
   @Published var isAnalyzing = false
   @Published var saveSuccess = false
   @Published var errorMessage: String?
+  @Published var currentScanId: String?  // Track which scan these ingredients belong to
   
   private let geminiService = GeminiService()
   private let db = Firestore.firestore()
@@ -71,6 +72,7 @@ final class IngredientController: ObservableObject {
       // Automatically save all ingredients after analysis
       statusText = "Saving \(allIngredients.count) ingredients..."
       await saveIngredients(scanId: scanId, ingredients: allIngredients)
+      currentScanId = scanId  // Track which scan these belong to
       isAnalyzing = false
     } catch {
       currentIngredients = nil
@@ -103,6 +105,46 @@ final class IngredientController: ObservableObject {
     } catch {
       statusText = "Save error: \(error.localizedDescription)"
       saveSuccess = false
+    }
+  }
+  
+  /// Loads ingredients from Firestore for a specific scan
+  func loadIngredients(scanId: String) async {
+    isAnalyzing = true
+    statusText = "Loading ingredients..."
+    
+    do {
+      // Fetch all ingredients for this scan
+      let snapshot = try await db.collection("scans")
+        .document(scanId)
+        .collection("ingredients")
+        .getDocuments()
+      
+      // Map Firestore documents to Ingredient objects
+      let ingredients = snapshot.documents.compactMap { doc -> Ingredient? in
+        let data = doc.data()
+        
+        guard let name = data["name"] as? String,
+              let amount = data["amount"] as? String,
+              let categoryString = data["category"] as? String
+        else {
+          return nil
+        }
+        
+        let category = IngredientCategory.from(string: categoryString)
+        return Ingredient(id: doc.documentID, name: name, amount: amount, category: category)
+      }
+      
+      currentIngredients = ingredients
+      currentScanId = scanId  // Track which scan these belong to
+      statusText = ingredients.isEmpty ? "No ingredients yet" : "Loaded \(ingredients.count) ingredients"
+      isAnalyzing = false
+      print("Loaded \(ingredients.count) ingredients from scan \(scanId)")
+    } catch {
+      currentIngredients = []
+      statusText = "No ingredients yet"
+      isAnalyzing = false
+      print("Load ingredients error: \(error.localizedDescription)")
     }
   }
   

@@ -74,6 +74,7 @@ struct ReviewScansView: View {
               .stroke(Color.green, lineWidth: 2)
           )
         }
+        .buttonStyle(.plain)
         .disabled(capturedImages.count >= maxPhotos)
         .opacity(capturedImages.count >= maxPhotos ? 0.5 : 1)
         
@@ -91,6 +92,7 @@ struct ReviewScansView: View {
           .background(Color.green)
           .cornerRadius(12)
         }
+        .buttonStyle(.plain)
         .disabled(capturedImages.isEmpty || isProcessing)
       }
       .padding()
@@ -103,14 +105,9 @@ struct ReviewScansView: View {
         processingOverlay
       }
     }
-    .background(
-      NavigationLink(
-        destination: destinationView,
-        isActive: $navigateToIngredients,
-        label: { EmptyView() }
-      )
-      .hidden()
-    )
+    .navigationDestination(isPresented: $navigateToIngredients) {
+      destinationView
+    }
   }
   
   // Photo Card
@@ -130,6 +127,7 @@ struct ReviewScansView: View {
             .font(.title2)
             .foregroundStyle(.red)
         }
+        .buttonStyle(.plain)
       }
       
       Image(uiImage: image)
@@ -171,7 +169,7 @@ struct ReviewScansView: View {
   // Destination View
   @ViewBuilder
   private var destinationView: some View {
-    if let scanId = controller.lastScanId, !capturedImageData.isEmpty {
+    if let scanId = controller.currentScanId, !capturedImageData.isEmpty {
       IngredientListView(scanId: scanId, imageDataArray: capturedImageData)
     } else {
       EmptyView()
@@ -194,7 +192,7 @@ struct ReviewScansView: View {
       
       isProcessing = false
       
-      if controller.lastScanId != nil {
+      if controller.currentScanId != nil {
         navigateToIngredients = true
       }
     }
