@@ -61,23 +61,50 @@ struct NavigationBarView: View {
             
             // Tab 4: Recipes
             NavigationStack {
-                if let recipes = recipeController.currentRecipes, !recipes.isEmpty {
-                    if let ingredients = ingredientController.currentIngredients, !ingredients.isEmpty {
-                        RecipeView(ingredients: ingredients)
-                            .navigationTitle("Recipes")
+                Group {
+                    if recipeController.isRetrieving {
+                        VStack {
+                            ProgressView()
+                            Text("Loading recipes...")
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .navigationTitle("Recipes")
+                    } else if let recipes = recipeController.currentRecipes, !recipes.isEmpty {
+                        // Show recipe cards
+                        VStack(spacing: 12) {
+                            Text("Your Recipes")
+                                .font(.title2).bold()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal)
+                            
+                            TabView {
+                                ForEach(recipes, id: \.recipeID) { recipe in
+                                    RecipeCard(recipe: recipe)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                }
+                            }
+                            .tabViewStyle(.page(indexDisplayMode: .automatic))
+                            .indexViewStyle(.page(backgroundDisplayMode: .always))
+                        }
+                        .navigationTitle("Recipes")
                     } else {
-                        RecipeView(ingredients: [])
-                            .navigationTitle("Recipes")
+                        EmptyStateView(
+                            icon: "fork.knife",
+                            title: "No Recipes Yet",
+                            message: "Scan ingredients and generate recipes to get started",
+                            buttonText: nil,
+                            buttonAction: nil
+                        )
+                        .navigationTitle("Recipes")
                     }
-                } else {
-                    EmptyStateView(
-                        icon: "fork.knife",
-                        title: "No Recipes Yet",
-                        message: "Scan ingredients and generate recipes to get started",
-                        buttonText: nil,
-                        buttonAction: nil
-                    )
-                    .navigationTitle("Recipes")
+                }
+                .task {
+                    // Load recipes from Firestore when tab appears (only if empty)
+                    if recipeController.currentRecipes == nil && !recipeController.isRetrieving {
+                        await recipeController.loadRecipes()
+                    }
                 }
             }
             .tabItem {
