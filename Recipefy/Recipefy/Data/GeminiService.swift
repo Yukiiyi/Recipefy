@@ -108,7 +108,10 @@ class GeminiService {
 		}
 		
 		let rawRecipes = try JSONDecoder().decode([RawRecipe].self, from: data)
-		let recipes = rawRecipes.map(Recipe.init)
+		var recipes: [Recipe] = []
+		for rawRecipe in rawRecipes {
+			recipes.append(Recipe(from: rawRecipe))
+		}
 		return recipes
 	}
 }
