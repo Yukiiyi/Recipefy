@@ -25,17 +25,7 @@ struct RecipeView: View {
 					}
 					.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
 				} else if let recipes = controller.currentRecipes, !recipes.isEmpty {
-					header(recipesCount: recipes.count)
-					// Horizontal, paging cards
-					TabView {
-						ForEach(recipes, id: \.recipeID) { recipe in
-							RecipeCard(recipe: recipe)
-								.padding(.horizontal, 16)
-								.padding(.vertical, 8)
-						}
-					}
-					.tabViewStyle(.page(indexDisplayMode: .automatic))
-					.indexViewStyle(.page(backgroundDisplayMode: .always))
+					RecipeCardsView(recipes: recipes)
 				} else {
 					// Idle / empty state
 					VStack(spacing: 12) {
@@ -62,18 +52,6 @@ struct RecipeView: View {
 				}
 			}
 		}
-	}
-	@ViewBuilder
-	private func header(recipesCount: Int) -> some View {
-		HStack {
-			Text("Recipe Suggestions")
-				.font(.title2).bold()
-			Spacer()
-			Text("\(recipesCount)")
-				.font(.subheadline.monospacedDigit())
-				.foregroundColor(.secondary)
-		}
-		.padding(.horizontal, 16)
 	}
 }
 
@@ -126,6 +104,7 @@ struct RecipeCard: View {
 									.frame(maxWidth: .infinity)
 						}
 						.buttonStyle(.borderedProminent)
+						.tint(.green)
 						.padding(.horizontal, 16)
 					
 			}

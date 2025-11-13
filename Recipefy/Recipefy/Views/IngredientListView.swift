@@ -10,7 +10,9 @@ import SwiftUI
 struct IngredientListView: View {
   let scanId: String
   let imageDataArray: [Data]
+  @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var controller: IngredientController
+  @EnvironmentObject var recipeController: RecipeController
   @Environment(\.dismiss) var dismiss
   @State private var showingAddForm = false
   @State private var showingEditForm = false
@@ -96,11 +98,24 @@ struct IngredientListView: View {
           .listStyle(.insetGrouped)
           
           // Find Recipes Button
-          NavigationLink(destination: RecipeView(ingredients: ingredients, scanId: scanId)) {
+          Button(action: {
+            Task {
+              // Generate recipes from current ingredients
+              await recipeController.getRecipe(ingredients: ingredients, sourceScanId: scanId)
+              
+              // Switch to Recipes tab to show the generated recipes
+              navigationState.navigateToTab(.recipes)
+            }
+          }) {
             HStack {
+              if recipeController.isRetrieving {
+                ProgressView()
+                  .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                  .scaleEffect(0.8)
+              }
               Image(systemName: "magnifyingglass")
                 .font(.title3)
-              Text("Find Recipes")
+              Text(recipeController.isRetrieving ? "Generating..." : "Find Recipes")
                 .font(.headline)
             }
             .foregroundStyle(.white)
@@ -108,7 +123,9 @@ struct IngredientListView: View {
             .padding()
             .background(Color.green)
             .cornerRadius(12)
+            .buttonStyle(.plain)
           }
+          .disabled(recipeController.isRetrieving)
           .padding()
         }
       }

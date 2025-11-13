@@ -13,6 +13,7 @@ struct RecipefyApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
   
   // Shared controllers for entire app
+  @StateObject private var navigationState = NavigationState()
   @StateObject private var authController = AuthController()
   @StateObject private var scanController = ScanController(
     storage: FirebaseStorageService(),
@@ -25,6 +26,7 @@ struct RecipefyApp: App {
     WindowGroup {
       if authController.isAuthenticated {
         NavigationBarView()
+          .environmentObject(navigationState)
           .environmentObject(authController)
           .environmentObject(scanController)
           .environmentObject(ingredientController)
