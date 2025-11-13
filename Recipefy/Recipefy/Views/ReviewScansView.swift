@@ -9,12 +9,12 @@ import SwiftUI
 
 struct ReviewScansView: View {
   @Environment(\.dismiss) var dismiss
+  @EnvironmentObject var navigationState: NavigationState
   @Binding var capturedImages: [UIImage]
   @Binding var capturedImageData: [Data]
   @ObservedObject var controller: ScanController
   
   @State private var isProcessing = false
-  @State private var navigateToIngredients = false
   
   private let maxPhotos = 5
   
@@ -99,14 +99,11 @@ struct ReviewScansView: View {
     }
     .navigationTitle("Review Scans")
     .navigationBarTitleDisplayMode(.inline)
-    .navigationBarBackButtonHidden(false)
+    .navigationBarBackButtonHidden(true)
     .overlay {
       if isProcessing {
         processingOverlay
       }
-    }
-    .navigationDestination(isPresented: $navigateToIngredients) {
-      destinationView
     }
   }
   
@@ -166,16 +163,6 @@ struct ReviewScansView: View {
     }
   }
   
-  // Destination View
-  @ViewBuilder
-  private var destinationView: some View {
-    if let scanId = controller.currentScanId, !capturedImageData.isEmpty {
-      IngredientListView(scanId: scanId, imageDataArray: capturedImageData)
-    } else {
-      EmptyView()
-    }
-  }
-  
   // Helper Functions
   private func removePhoto(at index: Int) {
     capturedImages.remove(at: index)
@@ -193,7 +180,8 @@ struct ReviewScansView: View {
       isProcessing = false
       
       if controller.currentScanId != nil {
-        navigateToIngredients = true
+        // Switch to Ingredients tab (no need to navigate within Scan tab)
+        navigationState.navigateToTab(.ingredients)
       }
     }
   }
