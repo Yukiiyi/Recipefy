@@ -106,29 +106,24 @@ struct ScanView: View {
   // Top Navigation Bar
   private var topNavigationBar: some View {
     HStack {
-      Button(action: {
-        // Handle back navigation
-      }) {
-        Image(systemName: "chevron.left")
-          .font(.title3)
-          .foregroundStyle(.white)
-          .padding(10)
-          .background(Circle().fill(Color.black.opacity(0.5)))
+      if !capturedImages.isEmpty {
+        Button(action: {
+          // Return to Review Scans
+          navigateToReviewScans = true
+        }) {
+          Image(systemName: "chevron.left")
+            .font(.headline.weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(width: 44, height: 44)
+            .background(
+              Circle().fill(Color.black.opacity(0.7))
+            )
+            .contentShape(Circle())
+            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 2)
+        }
+        .buttonStyle(.plain)
       }
-      .buttonStyle(.plain)
-      
       Spacer()
-      
-      Button(action: {
-        // Handle close
-      }) {
-        Image(systemName: "xmark")
-          .font(.title3)
-          .foregroundStyle(.white)
-          .padding(10)
-          .background(Circle().fill(Color.black.opacity(0.5)))
-      }
-      .buttonStyle(.plain)
     }
   }
   

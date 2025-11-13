@@ -45,7 +45,9 @@ final class RecipeController: ObservableObject {
 			statusText = "Found \(recipe.count) recipes!"
 			
 			// Automatically save recipes to Firestore (silently, don't change statusText)
-			await saveRecipes(sourceScanId: sourceScanId)
+			Task {
+				await self.saveRecipes(sourceScanId: sourceScanId)
+			}
 		} catch {
 			currentRecipes = nil
 			statusText = "Error: \(error.localizedDescription)"
