@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HomeView: View {
-  @State private var navigateToScan = false
+  @EnvironmentObject var navigationState: NavigationState
   
   var body: some View {
     ZStack {
@@ -37,7 +37,8 @@ struct HomeView: View {
               .foregroundColor(.white.opacity(0.9))
             
           Button {
-            navigateToScan = true
+            // Switch to Scan tab
+            navigationState.navigateToTab(.scan)
           } label: {
               HStack(spacing: 8) {
                 Image(systemName: "camera.fill")
@@ -107,9 +108,6 @@ struct HomeView: View {
       }
     }
     .navigationBarHidden(true)
-    .navigationDestination(isPresented: $navigateToScan) {
-      ScanRouteView()
-    }
   }
 }
 
@@ -163,15 +161,6 @@ struct QuickActionRow: View {
 }
 
 // MARK: - Inline placeholder screens (kept private to this file)
-
-// Dedicated route that uses shared controller from environment
-private struct ScanRouteView: View {
-  @EnvironmentObject var controller: ScanController
-  
-  var body: some View {
-    ScanView(controller: controller)
-  }
-}
 
 // Route view for My Ingredients that uses shared controllers from environment
 private struct MyIngredientsRouteView: View {

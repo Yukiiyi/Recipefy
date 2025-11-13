@@ -13,7 +13,7 @@ final class FirebaseScanRepository: ScanRepository {
   func createScan(userId: String, imagePaths: [String]) async throws -> String {
     let doc = db.collection(FirestorePaths.scans).document()
     let scan = Scan(
-      id: doc.documentID,
+      id: nil,
       userId: userId,
       imagePaths: imagePaths,
       status: "uploaded",

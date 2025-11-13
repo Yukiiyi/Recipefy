@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct NavigationBarView: View {
-    @State private var selectedTab = 0
+    @EnvironmentObject var navigationState: NavigationState
     @EnvironmentObject var scanController: ScanController
     @EnvironmentObject var ingredientController: IngredientController
     @EnvironmentObject var recipeController: RecipeController
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: $navigationState.selectedTab) {
             // Tab 1: Home
             NavigationStack {
                 HomeView()
@@ -26,12 +26,13 @@ struct NavigationBarView: View {
             
             // Tab 2: Ingredients
             NavigationStack {
-                if let ingredients = ingredientController.currentIngredients,
-                   !ingredients.isEmpty,
-                   let scanId = scanController.currentScanId {
+                if let scanId = scanController.currentScanId {
+                    // Show IngredientListView if we have a scan
+                    // Use image data if available (fresh scan), otherwise empty array (loaded from DB)
+                    let imageData = scanController.currentImageData ?? []
                     IngredientListView(
                         scanId: scanId,
-                        imageDataArray: scanController.currentImageData ?? []
+                        imageDataArray: imageData
                     )
                     .navigationTitle("My Ingredients")
                 } else {
@@ -46,13 +47,14 @@ struct NavigationBarView: View {
                 }
             }
             .task {
-                // Load ingredients from Firestore only if needed
-                // Don't load if we already have ingredients for this scan
-                if let scanId = scanController.currentScanId {
-                    let needsLoad = ingredientController.currentIngredients == nil || 
-                                    ingredientController.currentScanId != scanId
-                    
-                    if needsLoad && !ingredientController.isAnalyzing {
+                // Only load from DB if we don't have a fresh scan with image data
+                // like if user manually opened this tab without going through the scan flow
+                if let scanId = scanController.currentScanId,
+                   scanController.currentImageData == nil,
+                   !ingredientController.isAnalyzing {
+                    // Load from DB only if we don't have ingredients for this scan
+                    if ingredientController.currentIngredients == nil || 
+                       ingredientController.currentScanId != scanId {
                         await ingredientController.loadIngredients(scanId: scanId)
                     }
                 }
@@ -83,29 +85,8 @@ struct NavigationBarView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .navigationTitle("Recipes")
                     } else if let recipes = recipeController.currentRecipes, !recipes.isEmpty {
-                        // Show recipe cards (matching RecipeView design)
-                        VStack(spacing: 12) {
-                            // Header with count (matching RecipeView)
-                            HStack {
-                                Text("Recipe Suggestions")
-                                    .font(.title2).bold()
-                                Spacer()
-                                Text("\(recipes.count)")
-                                    .font(.subheadline.monospacedDigit())
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.horizontal, 16)
-                            
-                            TabView {
-                                ForEach(recipes, id: \.recipeID) { recipe in
-                                    RecipeCard(recipe: recipe)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                }
-                            }
-                            .tabViewStyle(.page(indexDisplayMode: .automatic))
-                            .indexViewStyle(.page(backgroundDisplayMode: .always))
-                        }
+						// Show recipe cards via shared view
+						RecipeCardsView(recipes: recipes)
                         .padding(.top, 8)
                         .navigationTitle("Recipes")
                     } else {
@@ -146,6 +127,7 @@ struct NavigationBarView: View {
 
 #Preview {
     NavigationBarView()
+        .environmentObject(NavigationState())
         .environmentObject(AuthController())
         .environmentObject(ScanController(storage: FirebaseStorageService(), scans: FirebaseScanRepository()))
         .environmentObject(IngredientController())
