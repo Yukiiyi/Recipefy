@@ -133,13 +133,15 @@ struct IngredientListView: View {
     .navigationTitle("Ingredients")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
-      ToolbarItem(placement: .navigationBarTrailing) {
-        Button(action: {
-          showingAddForm = true
-        }) {
-          Image(systemName: "plus")
-            .font(.body.weight(.semibold))
-            .foregroundStyle(.green)
+      if !recipeController.isRetrieving {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button(action: {
+            showingAddForm = true
+          }) {
+            Image(systemName: "plus")
+              .font(.body.weight(.semibold))
+              .foregroundStyle(.green)
+          }
         }
       }
     }
@@ -166,6 +168,11 @@ struct IngredientListView: View {
         Text(errorMessage)
       }
     }
+    .overlay {
+      if recipeController.isRetrieving {
+        generatingOverlay
+      }
+    }
   }
   
   private func deleteIngredients(at offsets: IndexSet) {
@@ -179,6 +186,34 @@ struct IngredientListView: View {
       for ingredient in ingredientsToDelete {
         await controller.deleteIngredient(scanId: scanId, ingredient: ingredient)
       }
+    }
+  }
+  
+  // MARK: - Overlays
+  private var generatingOverlay: some View {
+    ZStack {
+      Color.black.opacity(0.6)
+        .ignoresSafeArea() // keep tab bar appearance unchanged
+      
+      VStack(spacing: 14) {
+        ProgressView()
+          .scaleEffect(1.4)
+          .tint(.white)
+        Text("Generating recipes...")
+          .font(.headline)
+          .foregroundStyle(.white)
+        Text("This may take up to a minute. Sit tight — we'll show your recipes as soon as they're ready.")
+          .font(.subheadline)
+          .foregroundStyle(.white.opacity(0.9))
+          .multilineTextAlignment(.center)
+          .padding(.top, 2)
+      }
+      .padding(24)
+      .background(
+        RoundedRectangle(cornerRadius: 16)
+          .fill(Color.black.opacity(0.85))
+      )
+      .padding(.horizontal, 24)
     }
   }
 }
