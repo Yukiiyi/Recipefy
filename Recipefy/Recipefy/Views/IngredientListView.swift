@@ -123,8 +123,8 @@ struct IngredientListView: View {
             .padding()
             .background(Color.green)
             .cornerRadius(12)
-            .buttonStyle(.plain)
           }
+          .buttonStyle(.plain)
           .disabled(recipeController.isRetrieving)
           .padding()
         }

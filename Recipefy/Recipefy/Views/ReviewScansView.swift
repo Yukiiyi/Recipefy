@@ -99,7 +99,7 @@ struct ReviewScansView: View {
     }
     .navigationTitle("Review Scans")
     .navigationBarTitleDisplayMode(.inline)
-    .navigationBarBackButtonHidden(false)
+    .navigationBarBackButtonHidden(true)
     .overlay {
       if isProcessing {
         processingOverlay
