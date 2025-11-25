@@ -27,8 +27,8 @@ final class RecipeController: ObservableObject {
 		let ingredientsData = ingredients.map { $0.toDictionary() }
 		
 		let formattedIngredients = ingredientsData.compactMap { item in
-					if let name = item["name"], let amount = item["amount"] {
-					 return "\(amount) \(name)"
+					if let name = item["name"], let quantity = item["quantity"], let unit = item["unit"] {
+					 return "\(quantity) \(unit) \(name)"
 			 } else {
 					 return nil
 			 }

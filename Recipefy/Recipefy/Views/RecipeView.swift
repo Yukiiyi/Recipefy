@@ -175,8 +175,8 @@ private struct LabeledBulletList: View {
 	NavigationStack {
 		RecipeView(
 			ingredients: [
-				Ingredient(id: "1", name: "Chicken", amount: "500g", category: .proteins),
-				Ingredient(id: "2", name: "Rice", amount: "2 cups", category: .grains)
+				Ingredient(id: "1", name: "Chicken", quantity: "500", unit: "gram", category: .proteins),
+				Ingredient(id: "2", name: "Rice", quantity: "2", unit: "cup", category: .grains)
 			],
 			scanId: "preview-scan-123"
 		)
