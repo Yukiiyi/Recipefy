@@ -18,13 +18,16 @@ struct IngredientTests {
     let ingredient = Ingredient(
       id: "test-id",
       name: "Chicken",
-      amount: "500g",
+      quantity: "500",
+      unit: "gram",
       category: .proteins
     )
     
     #expect(ingredient.id == "test-id")
     #expect(ingredient.name == "Chicken")
-    #expect(ingredient.amount == "500g")
+    #expect(ingredient.quantity == "500")
+    #expect(ingredient.unit == "gram")
+    #expect(ingredient.amount == "500 gram")
     #expect(ingredient.category == .proteins)
   }
   
@@ -33,14 +36,16 @@ struct IngredientTests {
     let ingredient = Ingredient(
       id: "test-id",
       name: "Rice",
-      amount: "2 cups",
+      quantity: "2",
+      unit: "cup",
       category: .grains
     )
     
     let dictionary = ingredient.toDictionary()
     
     #expect(dictionary["name"] == "Rice")
-    #expect(dictionary["amount"] == "2 cups")
+    #expect(dictionary["quantity"] == "2")
+    #expect(dictionary["unit"] == "cup")
     #expect(dictionary["category"] == "Grains")
   }
   
@@ -48,7 +53,8 @@ struct IngredientTests {
   func ingredientFromDictionary() {
     let dictionary = [
       "name": "Tomato",
-      "amount": "3 pieces",
+      "quantity": "3",
+      "unit": "piece",
       "category": "Vegetables"
     ]
     
@@ -56,7 +62,9 @@ struct IngredientTests {
     
     #expect(ingredient != nil)
     #expect(ingredient?.name == "Tomato")
-    #expect(ingredient?.amount == "3 pieces")
+    #expect(ingredient?.quantity == "3")
+    #expect(ingredient?.unit == "piece")
+    #expect(ingredient?.amount == "3 piece")
     #expect(ingredient?.category == .vegetables)
   }
   
@@ -81,12 +89,14 @@ struct IngredientTests {
     [
       {
         "name": "Chicken Breast",
-        "amount": "500 g",
+        "quantity": "500",
+        "unit": "gram",
         "category": "Proteins"
       },
       {
         "name": "Rice",
-        "amount": "2 cups",
+        "quantity": "2",
+        "unit": "cup",
         "category": "Grains"
       }
     ]
@@ -98,6 +108,8 @@ struct IngredientTests {
     
     #expect(ingredients.count == 2)
     #expect(ingredients[0].name == "Chicken Breast")
+    #expect(ingredients[0].quantity == "500")
+    #expect(ingredients[0].unit == "gram")
     #expect(ingredients[1].category == .grains)
   }
   
@@ -108,7 +120,8 @@ struct IngredientTests {
     [
       {
         "name": "Tomato",
-        "amount": "3 pieces",
+        "quantity": "3",
+        "unit": "piece",
         "category": "Vegetables"
       }
     ]
@@ -127,6 +140,8 @@ struct IngredientTests {
     
     #expect(ingredients.count == 1)
     #expect(ingredients[0].name == "Tomato")
+    #expect(ingredients[0].quantity == "3")
+    #expect(ingredients[0].unit == "piece")
   }
   
   // MARK: - Category Validation Tests
@@ -136,7 +151,7 @@ struct IngredientTests {
     let categories: [IngredientCategory] = [.vegetables, .proteins, .grains, .dairy, .seasonings, .oil, .other]
     
     for category in categories {
-      let ingredient = Ingredient(id: nil, name: "Test", amount: "1", category: category)
+      let ingredient = Ingredient(id: nil, name: "Test", quantity: "1", unit: "cup", category: category)
       #expect(ingredient.category == category)
     }
   }
@@ -175,12 +190,15 @@ struct IngredientTests {
     let ingredient = Ingredient(
       id: "test",
       name: "Jalapeño Peppers",
-      amount: "1/4 cup",
+      quantity: "0.25",
+      unit: "cup",
       category: .vegetables
     )
     
     #expect(ingredient.name == "Jalapeño Peppers")
-    #expect(ingredient.amount == "1/4 cup")
+    #expect(ingredient.quantity == "0.25")
+    #expect(ingredient.unit == "cup")
+    #expect(ingredient.amount == "0.25 cup")
   }
   
   @Test("Ingredient with empty strings")
@@ -188,12 +206,15 @@ struct IngredientTests {
     let ingredient = Ingredient(
       id: "test",
       name: "",
-      amount: "",
+      quantity: "",
+      unit: "",
       category: .other
     )
     
     // Just verifying it can be created
     #expect(ingredient.name == "")
+    #expect(ingredient.quantity == "")
+    #expect(ingredient.unit == "")
     // Note: In real app, you'd want validation to prevent this
   }
 }

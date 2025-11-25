@@ -80,7 +80,7 @@ struct RecipeTests {
 	@Test
 	func ingredient_dictionary_roundTrip() async throws {
 		// Given
-		let ingredient = Ingredient(id: nil, name: "Tomato", amount: "2 cups", category: .vegetables)
+		let ingredient = Ingredient(id: nil, name: "Tomato", quantity: "2", unit: "cup", category: .vegetables)
 
 		// When
 		let dict = ingredient.toDictionary()
@@ -88,10 +88,13 @@ struct RecipeTests {
 
 		// Then
 		#expect(dict["name"] == "Tomato")
-		#expect(dict["amount"] == "2 cups")
+		#expect(dict["quantity"] == "2")
+		#expect(dict["unit"] == "cup")
 		#expect(dict["category"] == "Vegetables")
 		#expect(roundTripped?.name == "Tomato")
-		#expect(roundTripped?.amount == "2 cups")
+		#expect(roundTripped?.quantity == "2")
+		#expect(roundTripped?.unit == "cup")
+		#expect(roundTripped?.amount == "2 cup")
 		#expect(roundTripped?.category == .vegetables)
 	}
 }

@@ -14,11 +14,13 @@ struct IngredientFormView: View {
   let ingredient: Ingredient? // Optional - nil for Add, populated for Edit
   
   @State private var name: String
-  @State private var amount: String
+  @State private var quantity: String
+  @State private var unit: MeasurementUnit?
   @State private var category: IngredientCategory
   @State private var isSaving = false
   @State private var showingDeleteAlert = false
   @State private var shouldDismiss = false
+  @State private var quantityError: String?
   
   // Computed property to determine if we're editing
   private var isEditing: Bool {
@@ -33,7 +35,17 @@ struct IngredientFormView: View {
     
     // Pre-fill with existing values if editing
     _name = State(initialValue: ingredient?.name ?? "")
-    _amount = State(initialValue: ingredient?.amount ?? "")
+    _quantity = State(initialValue: ingredient?.quantity ?? "")
+    
+    // Parse unit string to MeasurementUnit enum
+    // For new ingredients, start with nil (forces user to select)
+    // For editing, use existing value
+    if let unitString = ingredient?.unit {
+      _unit = State(initialValue: MeasurementUnit(rawValue: unitString))
+    } else {
+      _unit = State(initialValue: nil)
+    }
+    
     _category = State(initialValue: ingredient?.category ?? .vegetables)
   }
   
@@ -45,9 +57,58 @@ struct IngredientFormView: View {
             .autocorrectionDisabled()
         }
         
-        Section("Amount") {
-          TextField("e.g., 2 cups, 500g", text: $amount)
-            .autocorrectionDisabled()
+        Section {
+          // Quantity
+          VStack(alignment: .leading, spacing: 4) {
+            HStack {
+              Text("Quantity")
+                .frame(width: 80, alignment: .leading)
+              TextField("e.g., 2", text: $quantity)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .onChange(of: quantity) { oldValue, newValue in
+                  // Clear error when user starts typing
+                  quantityError = nil
+                }
+            }
+            
+            // Error message
+            if let error = quantityError {
+              Text(error)
+                .font(.caption)
+                .foregroundStyle(.red)
+                .padding(.leading, 80)
+            }
+          }
+          
+          // Unit
+          Picker("Unit", selection: $unit) {
+            Text("Select unit...").tag(MeasurementUnit?.none)
+            
+            Section(header: Text("Volume")) {
+              ForEach(MeasurementUnit.volumeUnits) { unit in
+                Text(unit.displayName).tag(MeasurementUnit?.some(unit))
+              }
+            }
+            
+            Section(header: Text("Weight")) {
+              ForEach(MeasurementUnit.weightUnits) { unit in
+                Text(unit.displayName).tag(MeasurementUnit?.some(unit))
+              }
+            }
+            
+            Section(header: Text("Count")) {
+              ForEach(MeasurementUnit.countUnits) { unit in
+                Text(unit.displayName).tag(MeasurementUnit?.some(unit))
+              }
+            }
+          }
+        } header: {
+          Text("Amount")
+        } footer: {
+          Text("Enter quantity (e.g., 2, 1.5, 0.25) and select a unit")
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
         
         Section("Category") {
@@ -78,20 +139,31 @@ struct IngredientFormView: View {
         
         ToolbarItem(placement: .confirmationAction) {
           Button("Save") {
+            // Validate quantity first
+            if !isValidQuantity(quantity) {
+              quantityError = "Please enter a valid number"
+              return
+            }
+            
+            // Ensure unit is selected
+            guard let selectedUnit = unit else {
+              return
+            }
+            
             Task {
               isSaving = true
               if let ingredient = ingredient {
                 // Editing existing ingredient
-                await controller.updateIngredient(scanId: scanId, ingredient: ingredient, name: name, amount: amount, category: category)
+                await controller.updateIngredient(scanId: scanId, ingredient: ingredient, name: name, quantity: quantity, unit: selectedUnit.rawValue, category: category)
               } else {
                 // Adding new ingredient
-                await controller.addIngredient(scanId: scanId, name: name, amount: amount, category: category)
+                await controller.addIngredient(scanId: scanId, name: name, quantity: quantity, unit: selectedUnit.rawValue, category: category)
               }
               isSaving = false
               shouldDismiss = true
             }
           }
-          .disabled(name.isEmpty || amount.isEmpty || isSaving)
+          .disabled(name.isEmpty || quantity.isEmpty || unit == nil || isSaving)
         }
         
         // Show delete button only when editing
@@ -156,6 +228,30 @@ struct IngredientFormView: View {
     }
     .buttonStyle(.plain)
   }
+  
+  // Validation helper
+  private func isValidQuantity(_ input: String) -> Bool {
+    let trimmed = input.trimmingCharacters(in: .whitespaces)
+    
+    // Allow empty (will be caught by .disabled on button)
+    if trimmed.isEmpty {
+      return true
+    }
+    
+    // Check if it's a valid decimal number
+    if Double(trimmed) != nil {
+      return true
+    }
+    
+    // Check if it's a valid fraction (e.g., "1/2")
+    let fractionPattern = "^\\d+/\\d+$"
+    if let regex = try? NSRegularExpression(pattern: fractionPattern),
+       regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)) != nil {
+      return true
+    }
+    
+    return false
+  }
 }
 
 #Preview("Add Ingredient") {
@@ -172,7 +268,8 @@ struct IngredientFormView: View {
     ingredient: Ingredient(
       id: "preview-ingredient-id",
       name: "Chicken Breast",
-      amount: "500 g",
+      quantity: "500",
+      unit: "gram",
       category: .proteins
     )
   )

@@ -21,19 +21,30 @@ class GeminiService {
   func analyzeIngredients(image: UIImage) async throws -> [Ingredient] {
     let prompt = """
     Analyze this food image and identify all the ingredients you can see.
-    For each ingredient, provide the name, estimated amount, and food category.
+    For each ingredient, provide the name, quantity (numeric value), unit of measurement, and food category.
     
     Categories should be one of: [Vegetables, Proteins, Grains, Dairy, Seasonings, Oil, Other].
+    
+    Use ONLY these units of measurement:
+    - Volume: cup, tbsp, tsp, fl oz, ml, liter
+    - Weight: gram, kg, oz, lb
+    - Count: whole, piece, clove, bunch
+    
     Return the result as a JSON array with this exact format:
     [
       {
         "name": "ingredient name",
-        "amount": "estimated amount (e.g., '2 cups', '1 tbsp', '500 g', '3 pieces')",
+        "quantity": "2",
+        "unit": "cup",
         "category": "appropriate category from the list above"
       }
     ]
     
-    If you cannot determine the exact amount, make a reasonable estimate based on what you see.
+    Important:
+    - "quantity" should be ONLY the numeric value (e.g., "2", "1.5", "500", "0.25")
+    - "unit" should be ONLY the unit from the approved list above
+    - If you cannot determine the exact amount, make a reasonable estimate based on what you see
+    
     Return ONLY the JSON array, no additional text.
     """
     
