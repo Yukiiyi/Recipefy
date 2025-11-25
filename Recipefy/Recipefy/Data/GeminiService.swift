@@ -41,7 +41,7 @@ class GeminiService {
     ]
     
     Important:
-    - "quantity" should be ONLY the numeric value (e.g., "2", "1.5", "500", "0.25")
+    - "quantity" should be ONLY the numeric value (e.g., "2", "1.5", "500", "1/4", "0.5"). Use fractions and decimals where appropriate for their unit.
     - "unit" should be ONLY the unit from the approved list above
     - If you cannot determine the exact amount, make a reasonable estimate based on what you see
     
