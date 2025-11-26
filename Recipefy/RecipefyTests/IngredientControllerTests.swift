@@ -90,8 +90,8 @@ struct IngredientControllerTests {
     let sut = IngredientController()
     
     let ingredients = [
-      Ingredient(id: "1", name: "Chicken", amount: "500g", category: .proteins),
-      Ingredient(id: "2", name: "Rice", amount: "2 cups", category: .grains)
+      Ingredient(id: "1", name: "Chicken", quantity: "500", unit: "gram", category: .proteins),
+      Ingredient(id: "2", name: "Rice", quantity: "2", unit: "cup", category: .grains)
     ]
     
     sut.currentIngredients = ingredients
@@ -116,7 +116,7 @@ struct IngredientControllerTests {
     let sut = IngredientController()
     
     sut.currentIngredients = [
-      Ingredient(id: "1", name: "Tomato", amount: "3", category: .vegetables)
+      Ingredient(id: "1", name: "Tomato", quantity: "3", unit: "whole", category: .vegetables)
     ]
     
     #expect(sut.currentIngredients?.count == 1)
@@ -183,7 +183,7 @@ struct IngredientControllerTests {
     
     // Set some state
     sut.statusText = "Processing..."
-    sut.currentIngredients = [Ingredient(id: "1", name: "Test", amount: "1", category: .other)]
+    sut.currentIngredients = [Ingredient(id: "1", name: "Test", quantity: "1", unit: "cup", category: .other)]
     sut.isAnalyzing = true
     sut.saveSuccess = true
     sut.errorMessage = "Some error"
