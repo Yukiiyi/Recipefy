@@ -81,8 +81,8 @@ struct IngredientListView: View {
                   ingredientToEdit = ingredient
                   showingEditForm = true
                 }) {
-                  Image(systemName: "pencil.circle.fill")
-                    .font(.title)
+                  Image(systemName: "square.and.pencil")
+                    .font(.title2)
                     .foregroundStyle(.green)
                 }
               }

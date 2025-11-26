@@ -52,8 +52,14 @@ enum IngredientCategory: String, Codable, CaseIterable {
 struct Ingredient: Identifiable {
   var id: String?
   let name: String
-  let amount: String
+  let quantity: String
+  let unit: String
   let category: IngredientCategory
+  
+  /// Computed property for displaying the full amount
+  var amount: String {
+    "\(quantity) \(unit)"
+  }
 }
 
 // MARK: - Codable Conformance
@@ -64,7 +70,8 @@ extension Ingredient: Codable {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     id = try container.decodeIfPresent(String.self, forKey: .id)
     name = try container.decode(String.self, forKey: .name)
-    amount = try container.decode(String.self, forKey: .amount)
+    quantity = try container.decode(String.self, forKey: .quantity)
+    unit = try container.decode(String.self, forKey: .unit)
     
     // Validate category from potentially invalid AI response
     let categoryString = try container.decode(String.self, forKey: .category)
@@ -79,7 +86,8 @@ extension Ingredient {
   func toDictionary() -> [String: String] {
     return [
       "name": name,
-      "amount": amount,
+      "quantity": quantity,
+      "unit": unit,
       "category": category.rawValue
     ]
   }
@@ -87,11 +95,12 @@ extension Ingredient {
   /// Create from dictionary with category validation
   static func from(dictionary: [String: String]) -> Ingredient? {
     guard let name = dictionary["name"],
-          let amount = dictionary["amount"],
+          let quantity = dictionary["quantity"],
+          let unit = dictionary["unit"],
           let categoryString = dictionary["category"] else {
       return nil
     }
     let category = IngredientCategory.from(string: categoryString)
-    return Ingredient(id: nil, name: name, amount: amount, category: category)
+    return Ingredient(id: nil, name: name, quantity: quantity, unit: unit, category: category)
   }
 }

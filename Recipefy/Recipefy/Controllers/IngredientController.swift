@@ -28,13 +28,15 @@ final class IngredientController: ObservableObject {
   /// Creates Firestore-compatible ingredient data dictionary
   private func createIngredientData(
     name: String,
-    amount: String,
+    quantity: String,
+    unit: String,
     category: IngredientCategory,
     includeTimestamp: Bool = true
   ) -> [String: Any] {
     var data: [String: Any] = [
       "name": name,
-      "amount": amount,
+      "quantity": quantity,
+      "unit": unit,
       "category": category.rawValue
     ]
     if includeTimestamp {
@@ -91,7 +93,8 @@ final class IngredientController: ObservableObject {
       for (index, ingredient) in ingredientsWithIds.enumerated() {
         let ingredientData = createIngredientData(
           name: ingredient.name,
-          amount: ingredient.amount,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
           category: ingredient.category
         )
         
@@ -125,14 +128,15 @@ final class IngredientController: ObservableObject {
         let data = doc.data()
         
         guard let name = data["name"] as? String,
-              let amount = data["amount"] as? String,
+              let quantity = data["quantity"] as? String,
+              let unit = data["unit"] as? String,
               let categoryString = data["category"] as? String
         else {
           return nil
         }
         
         let category = IngredientCategory.from(string: categoryString)
-        return Ingredient(id: doc.documentID, name: name, amount: amount, category: category)
+        return Ingredient(id: doc.documentID, name: name, quantity: quantity, unit: unit, category: category)
       }
       
       currentIngredients = ingredients
@@ -169,15 +173,15 @@ final class IngredientController: ObservableObject {
     }
   }
   
-  func addIngredient(scanId: String, name: String, amount: String, category: IngredientCategory) async {
+  func addIngredient(scanId: String, name: String, quantity: String, unit: String, category: IngredientCategory) async {
     do {
       let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
       
-      let ingredientData = createIngredientData(name: name, amount: amount, category: category)
+      let ingredientData = createIngredientData(name: name, quantity: quantity, unit: unit, category: category)
       let docRef = try await ingredientsCollection.addDocument(data: ingredientData)
       
       // Create new ingredient with ID and add to top of list
-      let newIngredient = Ingredient(id: docRef.documentID, name: name, amount: amount, category: category)
+      let newIngredient = Ingredient(id: docRef.documentID, name: name, quantity: quantity, unit: unit, category: category)
       if currentIngredients != nil {
         currentIngredients?.insert(newIngredient, at: 0)  // Add to top
       } else {
@@ -189,7 +193,7 @@ final class IngredientController: ObservableObject {
     }
   }
   
-  func updateIngredient(scanId: String, ingredient: Ingredient, name: String, amount: String, category: IngredientCategory) async {
+  func updateIngredient(scanId: String, ingredient: Ingredient, name: String, quantity: String, unit: String, category: IngredientCategory) async {
     guard let ingredientId = ingredient.id else {
       errorMessage = "Cannot update: ingredient has no ID"
       return
@@ -199,12 +203,12 @@ final class IngredientController: ObservableObject {
       let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
       
       // Don't update createdAt - it should remain the original timestamp
-      let ingredientData = createIngredientData(name: name, amount: amount, category: category, includeTimestamp: false)
+      let ingredientData = createIngredientData(name: name, quantity: quantity, unit: unit, category: category, includeTimestamp: false)
       try await ingredientsCollection.document(ingredientId).setData(ingredientData, merge: true)
       
       // Update in local state
       if let index = currentIngredients?.firstIndex(where: { $0.id == ingredientId }) {
-        currentIngredients?[index] = Ingredient(id: ingredientId, name: name, amount: amount, category: category)
+        currentIngredients?[index] = Ingredient(id: ingredientId, name: name, quantity: quantity, unit: unit, category: category)
       }
     } catch {
       errorMessage = "Failed to update ingredient: \(error.localizedDescription)"
