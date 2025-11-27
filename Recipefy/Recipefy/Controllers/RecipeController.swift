@@ -87,6 +87,7 @@ final class RecipeController: ObservableObject {
 					"fiber": recipe.fiber,
 					"createdBy": userId,
 					"sourceScanId": sourceScanId ?? "",
+					"favorited": recipe.favorited,
 					"createdAt": Timestamp(date: Date())
 				]
 				
@@ -163,6 +164,8 @@ final class RecipeController: ObservableObject {
 					return nil
 				}
 				
+				let favorited = data["favorited"] as? Bool ?? false
+				
 				// Create Recipe object with document ID as recipeID
 				return Recipe(
 					recipeID: doc.documentID,
@@ -176,7 +179,8 @@ final class RecipeController: ObservableObject {
 					protein: protein,
 					carbs: carbs,
 					fat: fat,
-					fiber: fiber
+					fiber: fiber,
+					favorited: favorited
 				)
 			}
 			
@@ -189,6 +193,30 @@ final class RecipeController: ObservableObject {
 			statusText = "No recipes yet"
 			isRetrieving = false
 			print("❌ Load recipes error: \(error.localizedDescription)")
+		}
+	}
+	
+	func favoriteRecipe(recipeID: String, favorited: Bool) async {
+		guard let userId = Auth.auth().currentUser?.uid else {
+			print("No authenticated user")
+			return
+		}
+		
+		// Update local state immediately for responsive UI
+		if let index = currentRecipes?.firstIndex(where: { $0.recipeID == recipeID }) {
+			currentRecipes?[index].favorited = favorited
+		}
+		
+		do {
+			let recipeRef = db.collection("recipes").document(recipeID)
+			try await recipeRef.updateData(["favorited": favorited])
+			print("✅ Recipe \(recipeID) favorited status updated to \(favorited)")
+		} catch {
+			// Revert on error
+			if let index = currentRecipes?.firstIndex(where: { $0.recipeID == recipeID }) {
+				currentRecipes?[index].favorited = !favorited
+			}
+			print("❌ Failed to update favorite status: \(error.localizedDescription)")
 		}
 	}
 }

@@ -59,6 +59,7 @@ struct RecipeView: View {
 
 struct RecipeCard: View {
 	let recipe: Recipe
+	@EnvironmentObject var controller: RecipeController
 
 	var body: some View {
 		NavigationLink {
@@ -72,9 +73,18 @@ struct RecipeCard: View {
 							.font(.title3.weight(.semibold))
 							.lineLimit(2)
 							.minimumScaleFactor(0.8)
-						Image(systemName: "heart")
+						Spacer()
+						Button {
+							Task {
+								await controller.favoriteRecipe(recipeID: recipe.recipeID, favorited: !recipe.favorited)
+							}
+						} label: {
+							Image(systemName: recipe.favorited ? "heart.fill" : "heart")
+								.foregroundColor(recipe.favorited ? .red : .secondary)
+								.font(.title3)
+						}
+						.buttonStyle(.plain)
 					}
-					// Quick facts chips
 					HStack(spacing: 8) {
 						Chip(icon: "flame.fill", text: "\(recipe.calories) cal")
 						Chip(icon: "clock.fill", text: "\(recipe.cookMin) min")

@@ -22,6 +22,7 @@ struct Recipe: Codable {
   let carbs: Int
   let fat: Int
   let fiber: Int
+  var favorited: Bool = false
 }
 
 // MARK: - Supporting Types
@@ -31,7 +32,7 @@ struct Nutrition: Codable {
   let carbs: Int
   let fat: Int
   let fiber: Int
-  let description: String
+  let description: String //default to not saved
 }
 
 struct RawRecipe: Codable {
@@ -42,6 +43,7 @@ struct RawRecipe: Codable {
   let calories: Int
   let servings: Int
   let nutrition: Nutrition
+	var favorited: Bool = false
 }
 
 // MARK: - Recipe Conversion
@@ -60,6 +62,7 @@ extension Recipe {
     self.carbs = raw.nutrition.carbs
     self.fat = raw.nutrition.fat
     self.fiber = raw.nutrition.fiber
+    self.favorited = raw.favorited
   }
 }
 
