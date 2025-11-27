@@ -58,13 +58,16 @@ struct RecipeView: View {
 // MARK: - Recipe Card
 
 struct RecipeCard: View {
-		let recipe: Recipe
+	let recipe: Recipe
 
-		var body: some View {
+	var body: some View {
+		NavigationLink {
+			RecipeDetailView(recipe: recipe)
+		} label: {
 			GeometryReader { geo in
 				VStack(alignment: .leading, spacing: 12) {
 					// Title
-					HStack (spacing: 8){
+					HStack(spacing: 8) {
 						Text(recipe.title)
 							.font(.title3.weight(.semibold))
 							.lineLimit(2)
@@ -96,28 +99,20 @@ struct RecipeCard: View {
 					.padding(.top, 4)
 
 					Spacer(minLength: 0)
-					NavigationLink {
-						RecipeDetailView(recipe: recipe)
-						} label: {
-							Label("View Details", systemImage: "arrow.right.circle.fill")
-									.font(.headline)
-									.frame(maxWidth: .infinity)
-						}
-						.buttonStyle(.borderedProminent)
-						.tint(.green)
-						.padding(.horizontal, 16)
-					
-			}
-			.padding(16)
-			.frame(width: min(geo.size.width, 520)) // nice max width for larger devices
-			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-			.background(
+
+				}
+				.padding(16)
+				.frame(width: min(geo.size.width, 520))
+				.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+				.background(
 					RoundedRectangle(cornerRadius: 20, style: .continuous)
-							.fill(.background)
-							.shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 6)
-			)
+						.fill(.background)
+						.shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 6)
+				)
+			}
+			.frame(height: 450)
 		}
-		.frame(height: 450)
+		.buttonStyle(.plain)
 	}
 }
 
