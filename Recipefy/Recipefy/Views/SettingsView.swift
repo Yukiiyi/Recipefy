@@ -39,6 +39,19 @@ struct SettingsView: View {
                 .background(Color.white)
                 .cornerRadius(12)
                 .padding(.horizontal)
+
+                // MARK: - Dietary Preferences Section
+                sectionHeader("Dietary Preferences")
+                VStack(spacing: 0) {
+                    SettingsRow(icon: "leaf.fill", iconColor: .green,
+                                title: "Dietary Preferences",
+                                subtitle: "Allergies, Restrictions")
+                    
+                }
+                
+                .background(Color.white)
+                .cornerRadius(12)
+                .padding(.horizontal)
                 
                 // MARK: - Content Section
                 sectionHeader("Content")
