@@ -86,6 +86,7 @@ final class RecipeController: ObservableObject {
 					"carbs": recipe.carbs,
 					"fat": recipe.fat,
 					"fiber": recipe.fiber,
+					"sugar": recipe.sugar,
 					"createdBy": userId,
 					"sourceScanId": sourceScanId ?? "",
 					"favorited": recipe.favorited,
@@ -160,7 +161,8 @@ final class RecipeController: ObservableObject {
 							let protein = data["protein"] as? Int,
 							let carbs = data["carbs"] as? Int,
 							let fat = data["fat"] as? Int,
-							let fiber = data["fiber"] as? Int
+							let fiber = data["fiber"] as? Int,
+							let sugar = data["sugar"] as? Int
 				else {
 					return nil
 				}
@@ -181,6 +183,7 @@ final class RecipeController: ObservableObject {
 					carbs: carbs,
 					fat: fat,
 					fiber: fiber,
+					sugar: sugar,
 					favorited: favorited
 				)
 			}
@@ -250,7 +253,8 @@ final class RecipeController: ObservableObject {
 							let protein = data["protein"] as? Int,
 							let carbs = data["carbs"] as? Int,
 							let fat = data["fat"] as? Int,
-							let fiber = data["fiber"] as? Int
+							let fiber = data["fiber"] as? Int,
+							let sugar = data["sugar"] as? Int
 				else { return nil }
 
 				let favorited = data["favorited"] as? Bool ?? false
@@ -268,6 +272,7 @@ final class RecipeController: ObservableObject {
 					carbs: carbs,
 					fat: fat,
 					fiber: fiber,
+					sugar: sugar,
 					favorited: favorited
 				)
 			}
