@@ -15,6 +15,7 @@ import Combine
 final class RecipeController: ObservableObject {
 	@Published var statusText = "Idle"
   @Published var currentRecipes: [Recipe]?
+	@Published var favoritedRecipes: [Recipe]?
 	@Published var isRetrieving = false
 	@Published var isSaving = false
 	@Published var saveSuccess = false
@@ -217,6 +218,69 @@ final class RecipeController: ObservableObject {
 				currentRecipes?[index].favorited = !favorited
 			}
 			print("❌ Failed to update favorite status: \(error.localizedDescription)")
+		}
+	}
+	
+	func getFavoriteRecipes() async {
+		guard let userId = Auth.auth().currentUser?.uid else {
+			print("No authenticated user")
+			return
+		}
+
+		isRetrieving = true
+		statusText = "Loading favorites..."
+
+		do {
+			let snapshot = try await db.collection("recipes")
+				.whereField("favorited", isEqualTo: true)
+				.whereField("createdBy", isEqualTo: userId)
+//				.order(by: "createdAt", descending: true)
+				.getDocuments()
+
+			let recipes = snapshot.documents.compactMap { doc -> Recipe? in
+				let data = doc.data()
+
+				guard let title = data["title"] as? String,
+							let description = data["description"] as? String,
+							let ingredients = data["ingredients"] as? [String],
+							let steps = data["steps"] as? [String],
+							let calories = data["calories"] as? Int,
+							let servings = data["servings"] as? Int,
+							let cookMin = data["cookMin"] as? Int,
+							let protein = data["protein"] as? Int,
+							let carbs = data["carbs"] as? Int,
+							let fat = data["fat"] as? Int,
+							let fiber = data["fiber"] as? Int
+				else { return nil }
+
+				let favorited = data["favorited"] as? Bool ?? false
+
+				return Recipe(
+					recipeID: doc.documentID,
+					title: title,
+					description: description,
+					ingredients: ingredients,
+					steps: steps,
+					calories: calories,
+					servings: servings,
+					cookMin: cookMin,
+					protein: protein,
+					carbs: carbs,
+					fat: fat,
+					fiber: fiber,
+					favorited: favorited
+				)
+			}
+
+			self.favoritedRecipes = recipes
+			statusText = recipes.isEmpty ? "No favorites yet" : "Loaded \(recipes.count) favorites"
+			isRetrieving = false
+
+		} catch {
+			favoritedRecipes = []
+			statusText = "Failed to load favorites"
+			isRetrieving = false
+			print("❌ Favorite load error:", error.localizedDescription)
 		}
 	}
 }

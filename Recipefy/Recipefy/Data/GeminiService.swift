@@ -73,7 +73,7 @@ class GeminiService {
 	func getRecipe(ingredients: [String]) async throws -> [Recipe] {
 		let prompt = """
 		This is a list of the available ingredients: \(ingredients)
-		Provide 5 unique recipes that can be made using only the amount of ingredients listed. 
+		Provide 3 unique recipes that can be made using only the amount of ingredients listed. 
 		For each recipe, provide the name, calories, serving size, list of preparation steps (e.g. ["Boil water and cook pasta according to package directions", "Heat olive oil in a large pan over medium heat", ...]) , preparation time in minutes,  list of ingredients used (e.g. ["1 cup tomatoes", "1 lb Chicken Breast", ...]) , nutrition information in a map which contains the amount of carbs, fat, fiber, protein, and a description.
 		
 		Return the result as a JSON array with this exact format:
