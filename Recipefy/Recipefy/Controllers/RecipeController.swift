@@ -157,16 +157,15 @@ final class RecipeController: ObservableObject {
 							let steps = data["steps"] as? [String],
 							let calories = data["calories"] as? Int,
 							let servings = data["servings"] as? Int,
-							let cookMin = data["cookMin"] as? Int,
-							let protein = data["protein"] as? Int,
-							let carbs = data["carbs"] as? Int,
-							let fat = data["fat"] as? Int,
-							let fiber = data["fiber"] as? Int,
-							let sugar = data["sugar"] as? Int
+							let cookMin = data["cookMin"] as? Int
 				else {
 					return nil
 				}
-				
+				let protein = data["protein"] as? Int ?? 0
+				let carbs = data["carbs"] as? Int ?? 0
+				let fat = data["fat"] as? Int ?? 0
+				let fiber = data["fiber"] as? Int ?? 0
+				let sugar = data["sugar"] as? Int ?? 0
 				let favorited = data["favorited"] as? Bool ?? false
 				
 				// Create Recipe object with document ID as recipeID
