@@ -32,22 +32,51 @@ struct IngredientListView: View {
   
   var body: some View {
     VStack(spacing: 0) {
-      // Only show status when analyzing or there's an error
-      if controller.isAnalyzing || (controller.currentIngredients == nil && !controller.statusText.isEmpty) {
-        HStack(spacing: 8) {
-          if controller.isAnalyzing {
-            ProgressView().scaleEffect(0.8)
-          }
-          Text(controller.statusText).font(.footnote).foregroundStyle(.secondary)
+      // Full-screen loading state when analyzing
+      if controller.isAnalyzing {
+        VStack(spacing: 20) {
+          Spacer()
+          
+          // Animated icon
+          Image(systemName: "sparkle.magnifyingglass")
+            .font(.system(size: 56))
+            .foregroundStyle(.green)
+            .symbolEffect(.pulse)
+          
+          Text("Finding Ingredients")
+            .font(.title2)
+            .fontWeight(.semibold)
+            .foregroundStyle(.primary)
+          
+          Text(controller.statusText)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+          
+          ProgressView()
+            .scaleEffect(1.2)
+            .padding(.top, 8)
+          
+          Spacer()
         }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .background(Color.blue.opacity(0.15))
-        .cornerRadius(12)
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else if controller.currentIngredients == nil && !controller.statusText.isEmpty {
+        // Error or non-analyzing status
+        VStack(spacing: 12) {
+          Spacer()
+          Image(systemName: "exclamationmark.triangle")
+            .font(.system(size: 40))
+            .foregroundStyle(.orange)
+          Text(controller.statusText)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 32)
+          Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
       
-      if let ingredients = controller.currentIngredients {
+      if let ingredients = controller.currentIngredients, !ingredients.isEmpty, !controller.isAnalyzing {
         VStack(spacing: 0) {
           List {
             Section {
