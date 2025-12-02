@@ -107,7 +107,7 @@ struct IngredientListView: View {
             .font(.subheadline)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 36)
+            .padding(.leading, 32)
             .padding(.trailing, 20)
             .padding(.top, 8)
             .padding(.bottom, 4)
