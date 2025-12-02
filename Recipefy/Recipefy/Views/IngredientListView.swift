@@ -76,6 +76,30 @@ struct IngredientListView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
       
+      // Empty state when all ingredients have been deleted
+      if let ingredients = controller.currentIngredients, ingredients.isEmpty, !controller.isAnalyzing {
+        VStack(spacing: 16) {
+          Spacer()
+          
+          Image(systemName: "leaf.circle")
+            .font(.system(size: 48))
+            .foregroundStyle(.green)
+          
+          Text("No Ingredients")
+            .font(.title3)
+            .fontWeight(.semibold)
+            .foregroundStyle(.primary)
+          
+          Text("Tap + to add ingredients manually\nor scan new items")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+          
+          Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      }
+      
       if let ingredients = controller.currentIngredients, !ingredients.isEmpty, !controller.isAnalyzing {
         VStack(spacing: 0) {
           List {
