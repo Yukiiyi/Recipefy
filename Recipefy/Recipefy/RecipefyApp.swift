@@ -21,15 +21,13 @@ struct RecipefyApp: App {
   )
   @StateObject private var ingredientController = IngredientController()
   @StateObject private var recipeController = RecipeController()
-  
-  // Track if user should see landing page (always show before auth)
-  @State private var showLanding = true
 
   var body: some Scene {
     WindowGroup {
-      if showLanding {
-        // Show landing page first
-        LandingView(showLanding: $showLanding)
+      if authController.showLanding {
+        // Show landing page (initial load or after logout)
+        LandingView(showLanding: $authController.showLanding)
+          .environmentObject(authController)
       } else if authController.isAuthenticated {
         // Show main app after authentication
         NavigationBarView()

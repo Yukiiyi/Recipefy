@@ -11,7 +11,7 @@ import AVKit
 
 struct LandingView: View {
     @Binding var showLanding: Bool
-    @State private var navigateToSignIn = false
+    @EnvironmentObject var authController: AuthController
     
     var body: some View {
         ZStack {
@@ -43,11 +43,10 @@ struct LandingView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 8)
                     
-                    // Get Started Button
+                    // Get Started Button → Goes to Sign Up
                     Button {
-                        // Dismiss landing page and go to AuthView
+                        authController.startInLoginMode = false  // Sign Up mode
                         showLanding = false
-                        navigateToSignIn = false
                     } label: {
                         Text("Get Started")
                             .font(.system(size: 18, weight: .semibold))
@@ -61,16 +60,15 @@ struct LandingView: View {
                     .padding(.horizontal, 40)
                     .padding(.top, 16)
                     
-                    // Sign In Link
+                    // Sign In Link → Goes to Login
                     HStack(spacing: 4) {
                         Text("Already have an account ?")
                             .font(.system(size: 15))
                             .foregroundColor(.secondary)
                         
                         Button {
-                            // Go to sign in mode
+                            authController.startInLoginMode = true  // Login mode
                             showLanding = false
-                            navigateToSignIn = true
                         } label: {
                             Text("Sign in")
                                 .font(.system(size: 15, weight: .semibold))
@@ -247,5 +245,6 @@ struct ScanningCorner: View {
 
 #Preview {
     LandingView(showLanding: .constant(true))
+        .environmentObject(AuthController())
 }
 
