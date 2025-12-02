@@ -102,50 +102,60 @@ struct IngredientListView: View {
       
       if let ingredients = controller.currentIngredients, !ingredients.isEmpty, !controller.isAnalyzing {
         VStack(spacing: 0) {
+          // Compact summary at top - aligned with list content
+          Text("\(ingredients.count) ingredients detected")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 36)
+            .padding(.trailing, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 4)
+          
           List {
-            Section {
-              ForEach(ingredients) { ingredient in
-              HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                  Text(ingredient.name.capitalized)
-                    .font(.body)
-                    .fontWeight(.medium)
-                  HStack(spacing: 8) {
-                    Text(ingredient.amount)
-                      .font(.subheadline)
-                      .foregroundStyle(.secondary)
-                    Text("•")
-                      .font(.caption)
-                      .foregroundStyle(.secondary)
-                    Text(ingredient.category.rawValue)
-                      .font(.caption)
-                      .fontWeight(.medium)
-                      .foregroundStyle(.secondary)
-                      .padding(.horizontal, 8)
-                      .padding(.vertical, 4)
-                      .background(Color(.systemGray5))
-                      .cornerRadius(6)
+            // Group by category
+            ForEach(IngredientCategory.allCases, id: \.self) { category in
+              let categoryIngredients = ingredients.filter { $0.category == category }
+              
+              if !categoryIngredients.isEmpty {
+                Section {
+                  ForEach(categoryIngredients) { ingredient in
+                    HStack(spacing: 12) {
+                      VStack(alignment: .leading, spacing: 4) {
+                        Text(ingredient.name.capitalized)
+                          .font(.body)
+                          .fontWeight(.medium)
+                        Text(ingredient.amount)
+                          .font(.subheadline)
+                          .foregroundStyle(.secondary)
+                      }
+                      
+                      Spacer()
+                      
+                      Button(action: {
+                        ingredientToEdit = ingredient
+                        showingEditForm = true
+                      }) {
+                        Image(systemName: "square.and.pencil")
+                          .font(.title2)
+                          .foregroundStyle(.green)
+                      }
+                    }
+                    .padding(.vertical, 4)
                   }
-                }
-                
-                Spacer()
-                
-                Button(action: {
-                  ingredientToEdit = ingredient
-                  showingEditForm = true
-                }) {
-                  Image(systemName: "square.and.pencil")
-                    .font(.title2)
-                    .foregroundStyle(.green)
+                  .onDelete { indexSet in
+                    deleteIngredientsFromCategory(categoryIngredients, at: indexSet)
+                  }
+                } header: {
+                  HStack(spacing: 6) {
+                    Image(systemName: categoryIcon(for: category))
+                      .foregroundStyle(.green)
+                    Text(category.rawValue)
+                  }
+                  .font(.subheadline.weight(.semibold))
+                  .textCase(nil)
                 }
               }
-              .padding(.vertical, 8)
-            }
-            .onDelete(perform: deleteIngredients)
-            } header: {
-              Text("\(ingredients.count) Ingredients Detected")
-                .font(.subheadline)
-                .textCase(nil)
             }
           }
           .listStyle(.insetGrouped)
@@ -229,17 +239,26 @@ struct IngredientListView: View {
     }
   }
   
-  private func deleteIngredients(at offsets: IndexSet) {
-    guard let ingredients = controller.currentIngredients else { return }
+  private func deleteIngredientsFromCategory(_ categoryIngredients: [Ingredient], at offsets: IndexSet) {
+    // Get the ingredients to delete from the filtered category list
+    let ingredientsToDelete = offsets.map { categoryIngredients[$0] }
     
-    // Capture ingredients to delete before starting async operations
-    let ingredientsToDelete = offsets.map { ingredients[$0] }
-    
-    // Delete sequentially to avoid race conditions
     Task {
       for ingredient in ingredientsToDelete {
         await controller.deleteIngredient(scanId: scanId, ingredient: ingredient)
       }
+    }
+  }
+  
+  private func categoryIcon(for category: IngredientCategory) -> String {
+    switch category {
+    case .vegetables: return "leaf.fill"
+    case .proteins: return "fish.fill"
+    case .grains: return "takeoutbag.and.cup.and.straw.fill"
+    case .dairy: return "cup.and.saucer.fill"
+    case .seasonings: return "laurel.leading"
+    case .oil: return "drop.fill"
+    case .other: return "ellipsis.circle.fill"
     }
   }
   
