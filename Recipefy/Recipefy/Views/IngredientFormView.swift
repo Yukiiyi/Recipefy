@@ -223,7 +223,7 @@ struct IngredientFormView: View {
         .foregroundStyle(category == cat ? .white : .primary)
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(category == cat ? Color.green : Color.gray.opacity(0.15))
+        .background(category == cat ? Color.green : Color(.systemGray5))
         .cornerRadius(12)
     }
     .buttonStyle(.plain)

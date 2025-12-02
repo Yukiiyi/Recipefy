@@ -42,7 +42,7 @@ struct IngredientListView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(Color.blue.opacity(0.1))
+        .background(Color.blue.opacity(0.15))
         .cornerRadius(12)
         .padding()
       }
@@ -70,7 +70,7 @@ struct IngredientListView: View {
                       .foregroundStyle(.secondary)
                       .padding(.horizontal, 8)
                       .padding(.vertical, 4)
-                      .background(Color.gray.opacity(0.2))
+                      .background(Color(.systemGray5))
                       .cornerRadius(6)
                   }
                 }
@@ -130,6 +130,7 @@ struct IngredientListView: View {
         }
       }
     }
+    .background(Color(.systemGroupedBackground))
     .navigationTitle("Ingredients")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
