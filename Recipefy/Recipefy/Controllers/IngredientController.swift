@@ -52,45 +52,51 @@ final class IngredientController: ObservableObject {
   }
   
   func analyzeMultipleImages(imageDataArray: [Data], scanId: String) async {
+    // Prevent duplicate analysis
+    guard !isAnalyzing else { return }
+    
     isAnalyzing = true
     currentIngredients = nil
     let imageCount = imageDataArray.count
     statusText = "Analyzing \(imageCount) \(imageCount == 1 ? "image" : "images")..."
     
-    do {
-      // Convert all image data to UIImage first
-      let images: [UIImage] = try imageDataArray.compactMap { data in
-        guard let image = UIImage(data: data) else {
-          throw IngredientError.invalidImage
-        }
-        return image
-      }
-      
-      // Analyze all images in parallel using TaskGroup
-      let allIngredients: [Ingredient] = try await withThrowingTaskGroup(of: [Ingredient].self) { group in
-        for image in images {
-          group.addTask {
-            try await self.geminiService.analyzeIngredients(image: image)
+    // Use Task to run the analysis - this survives view lifecycle changes
+    Task { @MainActor in
+      do {
+        // Convert all image data to UIImage first
+        let images: [UIImage] = try imageDataArray.compactMap { data in
+          guard let image = UIImage(data: data) else {
+            throw IngredientError.invalidImage
           }
+          return image
         }
         
-        var results: [Ingredient] = []
-        for try await ingredients in group {
-          results.append(contentsOf: ingredients)
+        // Analyze all images in parallel using TaskGroup
+        let allIngredients: [Ingredient] = try await withThrowingTaskGroup(of: [Ingredient].self) { group in
+          for image in images {
+            group.addTask {
+              try await self.geminiService.analyzeIngredients(image: image)
+            }
+          }
+          
+          var results: [Ingredient] = []
+          for try await ingredients in group {
+            results.append(contentsOf: ingredients)
+          }
+          return results
         }
-        return results
+        
+        // Save all ingredients
+        let ingredientCount = allIngredients.count
+        statusText = "Saving \(ingredientCount) \(ingredientCount == 1 ? "ingredient" : "ingredients")..."
+        await saveIngredients(scanId: scanId, ingredients: allIngredients)
+        currentScanId = scanId
+        isAnalyzing = false
+      } catch {
+        currentIngredients = nil
+        statusText = "Error: \(error.localizedDescription)"
+        isAnalyzing = false
       }
-      
-      // Save all ingredients
-      let ingredientCount = allIngredients.count
-      statusText = "Saving \(ingredientCount) \(ingredientCount == 1 ? "ingredient" : "ingredients")..."
-      await saveIngredients(scanId: scanId, ingredients: allIngredients)
-      currentScanId = scanId
-      isAnalyzing = false
-    } catch {
-      currentIngredients = nil
-      statusText = "Error: \(error.localizedDescription)"
-      isAnalyzing = false
     }
   }
   

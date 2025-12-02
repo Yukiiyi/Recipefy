@@ -43,7 +43,7 @@ struct IngredientListView: View {
             .foregroundStyle(.green)
             .symbolEffect(.pulse)
           
-          Text("Finding Ingredients")
+          Text("Identifying Ingredients")
             .font(.title2)
             .fontWeight(.semibold)
             .foregroundStyle(.primary)
