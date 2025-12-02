@@ -252,11 +252,11 @@ struct IngredientListView: View {
   
   private func categoryIcon(for category: IngredientCategory) -> String {
     switch category {
-    case .vegetables: return "leaf.fill"
+    case .vegetables: return "carrot.fill"
     case .proteins: return "fish.fill"
-    case .grains: return "takeoutbag.and.cup.and.straw.fill"
+    case .grains: return "laurel.leading"
     case .dairy: return "cup.and.saucer.fill"
-    case .seasonings: return "laurel.leading"
+    case .seasonings: return "leaf.fill"
     case .oil: return "drop.fill"
     case .other: return "ellipsis.circle.fill"
     }
