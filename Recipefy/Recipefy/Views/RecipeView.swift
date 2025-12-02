@@ -62,62 +62,59 @@ struct RecipeCard: View {
 
 		var body: some View {
 			GeometryReader { geo in
-				VStack(alignment: .leading, spacing: 12) {
-					// Title
-					HStack (spacing: 8){
-						Text(recipe.title)
-							.font(.title3.weight(.semibold))
-							.lineLimit(2)
-							.minimumScaleFactor(0.8)
-						Image(systemName: "heart")
-					}
-					// Quick facts chips
-					HStack(spacing: 8) {
-						Chip(icon: "flame.fill", text: "\(recipe.calories) cal")
-						Chip(icon: "clock.fill", text: "\(recipe.cookMin) min")
-						Chip(icon: "person.2.fill", text: "Serves \(recipe.servings)")
-					}
-					// Description
-					if !recipe.description.isEmpty {
-						Text(recipe.description)
-							.font(.subheadline)
-							.foregroundColor(.secondary)
-							.lineLimit(3)
-					}
-
-					// Ingredients / Steps previews
-					VStack(alignment: .leading, spacing: 8) {
-						if !recipe.ingredients.isEmpty {
-							LabeledBulletList(label: "Ingredients",
-																items: recipe.ingredients.prefix(5),
-																moreCount: recipe.ingredients.count - 5)
+				NavigationLink {
+					RecipeDetailView(recipe: recipe)
+				} label: {
+					VStack(alignment: .leading, spacing: 12) {
+						// Title
+						HStack(alignment: .firstTextBaseline, spacing: 8) {
+							Text(recipe.title)
+								.font(.title3.weight(.semibold))
+								.lineLimit(2)
+								.minimumScaleFactor(0.8)
+								.foregroundColor(.primary)
+							
+							Spacer()
+							
+							Image(systemName: "heart")
 						}
-					}
-					.padding(.top, 4)
-
-					Spacer(minLength: 0)
-					NavigationLink {
-						RecipeDetailView(recipe: recipe)
-						} label: {
-							Label("View Details", systemImage: "arrow.right.circle.fill")
-									.font(.headline)
-									.frame(maxWidth: .infinity)
+						// Quick facts chips
+						HStack(spacing: 8) {
+							Chip(icon: "flame.fill", text: "\(recipe.calories) cal").foregroundColor(.primary)
+							Chip(icon: "clock.fill", text: "\(recipe.cookMin) min").foregroundColor(.primary)
+							Chip(icon: "person.2.fill", text: "Serves \(recipe.servings)").foregroundColor(.primary)
 						}
-						.buttonStyle(.borderedProminent)
-						.tint(.green)
-						.padding(.horizontal, 16)
-					
+						// Description
+						if !recipe.description.isEmpty {
+							Text(recipe.description)
+								.font(.subheadline)
+								.foregroundColor(.secondary)
+								.lineLimit(3)
+						}
+
+						// Ingredients / Steps previews
+						VStack(alignment: .leading, spacing: 8) {
+							if !recipe.ingredients.isEmpty {
+								LabeledBulletList(label: "Ingredients",
+																	items: recipe.ingredients.prefix(5),
+																	moreCount: recipe.ingredients.count - 5)
+							}
+						}
+						.padding(.top, 4)
+				}
+				.foregroundStyle(.primary)
+				.padding(16)
+				.frame(width: min(geo.size.width, 520)) // nice max width for larger devices
+				.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+				.background(
+						RoundedRectangle(cornerRadius: 20, style: .continuous)
+								.fill(.background)
+								.shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 6)
+				)
+				.buttonStyle(.plain)
 			}
-			.padding(16)
-			.frame(width: min(geo.size.width, 520)) // nice max width for larger devices
-			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-			.background(
-					RoundedRectangle(cornerRadius: 20, style: .continuous)
-							.fill(.background)
-							.shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 6)
-			)
+			.frame(height: 450)
 		}
-		.frame(height: 450)
 	}
 }
 
