@@ -35,13 +35,13 @@ class GeminiService {
       {
         "name": "ingredient name",
         "quantity": "2",
-        "unit": "cup",
+        "unit": "appropriate category from hte list above",
         "category": "appropriate category from the list above"
       }
     ]
     
     Important:
-    - "quantity" should be ONLY the numeric value (e.g., "2", "1.5", "500", "1/4", "0.5"). Use fractions and decimals where appropriate for their unit.
+    - "quantity" should be ONLY the numeric value (e.g., "2", "1.5", "500", "1/4", "0.5"). Use fractions and decimals where appropriate for their measurement unit.
     - "unit" should be ONLY the unit from the approved list above
     - If you cannot determine the exact amount, make a reasonable estimate based on what you see
     
