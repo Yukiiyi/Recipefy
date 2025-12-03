@@ -20,9 +20,11 @@ final class RecipeController: ObservableObject {
 	@Published var isSaving = false
 	@Published var saveSuccess = false
 	@Published var lastGeneratedScanId: String?
+	@Published var isLoadingMore = false
     
   private let geminiService = GeminiService()
 	private let db = Firestore.firestore()
+	private var lastFormattedIngredients: [String] = []
 	
 	func getRecipe(ingredients: [Ingredient], sourceScanId: String? = nil) async {
 		let ingredientsData = ingredients.map { $0.toDictionary() }
@@ -34,7 +36,10 @@ final class RecipeController: ObservableObject {
 					 return nil
 			 }
 		}
+		lastFormattedIngredients = formattedIngredients
+		
 		isRetrieving = true
+		isLoadingMore = false
 		currentRecipes = nil
 		statusText = "Generating Recipes with AI..."
 		
@@ -200,8 +205,7 @@ final class RecipeController: ObservableObject {
 			print("❌ Load recipes error: \(error.localizedDescription)")
 		}
 	}
-	
-	@MainActor
+
 	func toggleFavorite(for recipeID: String) {
 		// Flip in currentRecipes
 		if let index = currentRecipes?.firstIndex(where: { $0.recipeID == recipeID }) {
@@ -233,8 +237,8 @@ final class RecipeController: ObservableObject {
 	
 	func loadFavoriteRecipes() async {
 		guard let userId = Auth.auth().currentUser?.uid else {
-				statusText = "No authenticated user"
-				return
+			statusText = "No authenticated user"
+			return
 		}
 		
 		isRetrieving = true
@@ -289,14 +293,40 @@ final class RecipeController: ObservableObject {
 			favoriteRecipes = recipes
 			statusText = recipes.isEmpty ? "No favorites yet" : "Loaded \(recipes.count) favorites"
 		} catch {
-				favoriteRecipes = []
-				statusText = "Failed to load favorites"
-				print("❌ Load favorites error: \(error.localizedDescription)")
+			favoriteRecipes = []
+			statusText = "Failed to load favorites"
+			print("❌ Load favorites error: \(error.localizedDescription)")
 		}
 		
 		isRetrieving = false
 	}
+	
+	func loadMoreRecipesIfNeeded() async {
+			// Don't re-enter while already loading, or if we have nothing to use
+			guard !isRetrieving, !isLoadingMore, !lastFormattedIngredients.isEmpty else {
+				return
+			}
+			
+			isLoadingMore = true
+			
+			do {
+				let moreRecipes = try await geminiService.getRecipe(ingredients: lastFormattedIngredients)
+				
+				if currentRecipes == nil {
+					currentRecipes = moreRecipes
+				} else {
+					currentRecipes?.append(contentsOf: moreRecipes)
+				}
 
+				Task {
+					await self.saveRecipes(sourceScanId: self.lastGeneratedScanId)
+				}
+			} catch {
+				print("❌ Failed to load more recipes: \(error.localizedDescription)")
+			}
+			
+			isLoadingMore = false
+		}
 }
 
 
