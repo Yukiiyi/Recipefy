@@ -58,49 +58,56 @@ struct RecipeView: View {
 // MARK: - Recipe Card
 
 struct RecipeCard: View {
-		let recipe: Recipe
+	@EnvironmentObject var controller: RecipeController
+	let recipe: Recipe
 
-		var body: some View {
-			GeometryReader { geo in
-				NavigationLink {
-					RecipeDetailView(recipe: recipe)
-				} label: {
-					VStack(alignment: .leading, spacing: 12) {
-						// Title
-						HStack(alignment: .firstTextBaseline, spacing: 8) {
-							Text(recipe.title)
-								.font(.title3.weight(.semibold))
-								.lineLimit(2)
-								.minimumScaleFactor(0.8)
-								.foregroundColor(.primary)
+	var body: some View {
+		GeometryReader { geo in
+			NavigationLink {
+				RecipeDetailView(recipe: recipe)
+			} label: {
+				VStack(alignment: .leading, spacing: 12) {
+					// Title
+					HStack(alignment: .firstTextBaseline, spacing: 8) {
+						Text(recipe.title)
+							.font(.title3.weight(.semibold))
+							.lineLimit(2)
+							.minimumScaleFactor(0.8)
+							.foregroundColor(.primary)
 							
-							Spacer()
+						Spacer()
 							
-							Image(systemName: "heart")
+						Button {
+								controller.toggleFavorite(for: recipe.recipeID)
+						} label: {
+								Image(systemName: recipe.favorited ? "heart.fill" : "heart")
+									.foregroundColor(recipe.favorited ? .red : .secondary)
 						}
-						// Quick facts chips
-						HStack(spacing: 8) {
-							Chip(icon: "flame.fill", text: "\(recipe.calories) cal").foregroundColor(.primary)
-							Chip(icon: "clock.fill", text: "\(recipe.cookMin) min").foregroundColor(.primary)
-							Chip(icon: "person.2.fill", text: "Serves \(recipe.servings)").foregroundColor(.primary)
-						}
-						// Description
-						if !recipe.description.isEmpty {
-							Text(recipe.description)
-								.font(.subheadline)
-								.foregroundColor(.secondary)
-								.lineLimit(3)
-						}
+						.buttonStyle(.borderless)
+					}
+					// Quick facts chips
+					HStack(spacing: 8) {
+						Chip(icon: "flame.fill", text: "\(recipe.calories) cal").foregroundColor(.primary)
+						Chip(icon: "clock.fill", text: "\(recipe.cookMin) min").foregroundColor(.primary)
+						Chip(icon: "person.2.fill", text: "Serves \(recipe.servings)").foregroundColor(.primary)
+					}
+					// Description
+					if !recipe.description.isEmpty {
+						Text(recipe.description)
+							.font(.subheadline)
+							.foregroundColor(.secondary)
+							.lineLimit(3)
+					}
 
-						// Ingredients / Steps previews
-						VStack(alignment: .leading, spacing: 8) {
-							if !recipe.ingredients.isEmpty {
-								LabeledBulletList(label: "Ingredients",
-																	items: recipe.ingredients.prefix(5),
-																	moreCount: recipe.ingredients.count - 5)
-							}
+					// Ingredients / Steps previews
+					VStack(alignment: .leading, spacing: 8) {
+						if !recipe.ingredients.isEmpty {
+							LabeledBulletList(label: "Ingredients",
+																items: recipe.ingredients.prefix(5),
+																moreCount: recipe.ingredients.count - 5)
 						}
-						.padding(.top, 4)
+					}
+					.padding(.top, 4)
 				}
 				.foregroundStyle(.primary)
 				.padding(16)
