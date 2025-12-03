@@ -26,6 +26,7 @@ final class RecipeController: ObservableObject {
 	
 	func getRecipe(ingredients: [Ingredient], sourceScanId: String? = nil) async {
 		let ingredientsData = ingredients.map { $0.toDictionary() }
+		
 		let formattedIngredients = ingredientsData.compactMap { item in
 					if let name = item["name"], let quantity = item["quantity"], let unit = item["unit"] {
 					 return "\(quantity) \(unit) \(name)"
@@ -52,7 +53,6 @@ final class RecipeController: ObservableObject {
 			currentRecipes = nil
 			statusText = "Error: \(error.localizedDescription)"
 			isRetrieving = false
-			print(statusText)
 		}
 	}
 	
