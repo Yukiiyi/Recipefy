@@ -8,7 +8,9 @@
 import SwiftUI
 
 struct RecipeCardsView: View {
+	@EnvironmentObject var controller: RecipeController
   let recipes: [Recipe]
+	@State private var currentIndex: Int = 0
   
   var body: some View {
     VStack(spacing: 12) {
@@ -23,15 +25,24 @@ struct RecipeCardsView: View {
       }
       .padding(.horizontal, 16)
       
-      TabView {
-        ForEach(recipes, id: \.recipeID) { recipe in
-          RecipeCard(recipe: recipe)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-        }
-      }
+			TabView(selection: $currentIndex) {
+				ForEach(Array(recipes.enumerated()), id: \.element.recipeID) { index, recipe in
+					RecipeCard(recipe: recipe)
+						.padding(.horizontal, 16)
+						.padding(.vertical, 8)
+						.tag(index)
+				}
+			}
       .tabViewStyle(.page(indexDisplayMode: .automatic))
       .indexViewStyle(.page(backgroundDisplayMode: .always))
+			.onChange(of: currentIndex) { newValue in
+				guard !recipes.isEmpty else { return }
+				if newValue == recipes.count - 1 {
+					Task {
+						await controller.loadMoreRecipesIfNeeded()
+					}
+				}
+			}
     }
   }
 }
