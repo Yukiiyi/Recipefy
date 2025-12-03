@@ -73,7 +73,7 @@ class GeminiService {
 	func getRecipe(ingredients: [String]) async throws -> [Recipe] {
 		let prompt = """
 		This is a list of the available ingredients: \(ingredients)
-		Provide 5 unique recipes that can be made using only the amount of ingredients listed. 
+		Provide 3 unique recipes that can be made using only the amount of ingredients listed. 
 		For each recipe, provide the name, calories, serving size, list of preparation steps (e.g. ["Boil water and cook pasta according to package directions", "Heat olive oil in a large pan over medium heat", ...]) , preparation time in minutes,  list of ingredients used (e.g. ["1 cup tomatoes", "1 lb Chicken Breast", ...]) , nutrition information in a map which contains the amount of carbs, fat, fiber, protein, and a description.
 		
 		Return the result as a JSON array with this exact format:
@@ -118,12 +118,27 @@ class GeminiService {
 			throw GeminiError.parsingError
 		}
 		
-		let rawRecipes = try JSONDecoder().decode([RawRecipe].self, from: data)
-		var recipes: [Recipe] = []
-		for rawRecipe in rawRecipes {
-			recipes.append(Recipe(from: rawRecipe))
+		do {
+			let rawRecipes = try JSONDecoder().decode([RawRecipe].self, from: data)
+				return rawRecipes.map { Recipe(from: $0) }
+		} catch {
+			print("❌ Decoding error: \(error)")
+			if let decodingError = error as? DecodingError {
+				switch decodingError {
+				case .keyNotFound(let key, let context):
+					print("Missing key: \(key.stringValue) in \(context.codingPath)")
+				case .valueNotFound(let type, let context):
+					print("Missing value for type \(type) in \(context.codingPath)")
+				case .typeMismatch(let type, let context):
+					print("Type mismatch for type \(type) in \(context.codingPath)")
+				case .dataCorrupted(let context):
+					print("Data corrupted: \(context.debugDescription)")
+				@unknown default:
+						break
+				}
+			}
+			throw error
 		}
-		return recipes
 	}
 }
 
