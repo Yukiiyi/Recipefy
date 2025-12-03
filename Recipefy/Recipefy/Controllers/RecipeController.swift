@@ -191,6 +191,14 @@ final class RecipeController: ObservableObject {
 			print("❌ Load recipes error: \(error.localizedDescription)")
 		}
 	}
+	
+	func toggleFavorite(for recipeID: String) {
+		guard let index = currentRecipes?.firstIndex(where: { $0.recipeID == recipeID }) else {
+			return
+		}
+		currentRecipes?[index].favorited.toggle()
+		print(currentRecipes?[index].favorited ?? "error")
+	}
 }
 
 
