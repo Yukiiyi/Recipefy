@@ -52,6 +52,7 @@ final class RecipeController: ObservableObject {
 		} catch {
 			currentRecipes = nil
 			statusText = "Error: \(error.localizedDescription)"
+			print(statusText)
 			isRetrieving = false
 		}
 	}
@@ -86,6 +87,7 @@ final class RecipeController: ObservableObject {
 					"carbs": recipe.carbs,
 					"fat": recipe.fat,
 					"fiber": recipe.fiber,
+					"sugar": recipe.sugar,
 					"createdBy": userId,
 					"sourceScanId": sourceScanId ?? "",
 					"favorited": recipe.favorited,
@@ -165,6 +167,7 @@ final class RecipeController: ObservableObject {
 					return nil
 				}
 				
+				let sugar = data["sugar"] as? Int ?? 0
 				let favorited = data["favorited"] as? Bool ?? false
 				
 				// Create Recipe object with document ID as recipeID
@@ -181,6 +184,7 @@ final class RecipeController: ObservableObject {
 					carbs: carbs,
 					fat: fat,
 					fiber: fiber,
+					sugar: sugar,
 					favorited: favorited
 				)
 			}
@@ -261,6 +265,7 @@ final class RecipeController: ObservableObject {
 					return nil
 				}
 					
+				let sugar = data["sugar"] as? Int ?? 0
 				let favorited = data["favorited"] as? Bool ?? false
 					
 				return Recipe(
@@ -276,6 +281,7 @@ final class RecipeController: ObservableObject {
 					carbs: carbs,
 					fat: fat,
 					fiber: fiber,
+					sugar: sugar,
 					favorited: favorited
 				)
 			}
