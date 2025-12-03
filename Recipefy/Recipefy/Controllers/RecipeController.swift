@@ -240,7 +240,7 @@ final class RecipeController: ObservableObject {
 			let snapshot = try await db.collection("recipes")
 					.whereField("createdBy", isEqualTo: userId)
 					.whereField("favorited", isEqualTo: true)
-//					.order(by: "createdAt", descending: true)
+					.order(by: "createdAt", descending: true)
 					.getDocuments()
 			
 			let recipes = snapshot.documents.compactMap { doc -> Recipe? in
