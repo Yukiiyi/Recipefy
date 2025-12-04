@@ -141,6 +141,7 @@ struct NutritionTab: View {
 					macroCard(title: "Carbs", value: recipe.carbs, unit: "g", icon: "carrot.fill")
 					macroCard(title: "Fat", value: recipe.fat, unit: "g", icon: "drop.fill")
 					macroCard(title: "Fiber", value: recipe.fiber, unit: "g", icon: "leaf.fill")
+					macroCard(title: "Sugar", value: recipe.sugar, unit: "g", icon: "cube.fill")
 				}
 
 				if !recipe.description.isEmpty {
@@ -183,7 +184,7 @@ struct RecipeDetailView_Previews: PreviewProvider {
 				ingredients: ["8 oz spaghetti", "2 tbsp olive oil", "2 cloves garlic", "1 lemon", "1 cup chicken"],
 				steps: ["Boil pasta", "Sauté garlic", "Add chicken and lemon", "Toss with pasta"],
 				calories: 620, servings: 2, cookMin: 25,
-				protein: 32, carbs: 75, fat: 18, fiber: 6
+				protein: 32, carbs: 75, fat: 18, fiber: 6, sugar: 2
 			)
 		)
 	}

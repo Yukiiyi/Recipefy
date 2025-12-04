@@ -58,24 +58,38 @@ struct RecipeView: View {
 // MARK: - Recipe Card
 
 struct RecipeCard: View {
-		let recipe: Recipe
+	@EnvironmentObject var controller: RecipeController
+	let recipe: Recipe
 
-		var body: some View {
-			GeometryReader { geo in
+	var body: some View {
+		GeometryReader { geo in
+			NavigationLink {
+				RecipeDetailView(recipe: recipe)
+			} label: {
 				VStack(alignment: .leading, spacing: 12) {
 					// Title
-					HStack (spacing: 8){
+					HStack(alignment: .firstTextBaseline, spacing: 8) {
 						Text(recipe.title)
 							.font(.title3.weight(.semibold))
 							.lineLimit(2)
 							.minimumScaleFactor(0.8)
-						Image(systemName: "heart")
+							.foregroundColor(.primary)
+							
+						Spacer()
+							
+						Button {
+								controller.toggleFavorite(for: recipe.recipeID)
+						} label: {
+								Image(systemName: recipe.favorited ? "heart.fill" : "heart")
+									.foregroundColor(recipe.favorited ? .red : .secondary)
+						}
+						.buttonStyle(.borderless)
 					}
 					// Quick facts chips
 					HStack(spacing: 8) {
-						Chip(icon: "flame.fill", text: "\(recipe.calories) cal")
-						Chip(icon: "clock.fill", text: "\(recipe.cookMin) min")
-						Chip(icon: "person.2.fill", text: "Serves \(recipe.servings)")
+						Chip(icon: "flame.fill", text: "\(recipe.calories) cal").foregroundColor(.primary)
+						Chip(icon: "clock.fill", text: "\(recipe.cookMin) min").foregroundColor(.primary)
+						Chip(icon: "person.2.fill", text: "Serves \(recipe.servings)").foregroundColor(.primary)
 					}
 					// Description
 					if !recipe.description.isEmpty {
@@ -94,30 +108,20 @@ struct RecipeCard: View {
 						}
 					}
 					.padding(.top, 4)
-
-					Spacer(minLength: 0)
-					NavigationLink {
-						RecipeDetailView(recipe: recipe)
-						} label: {
-							Label("View Details", systemImage: "arrow.right.circle.fill")
-									.font(.headline)
-									.frame(maxWidth: .infinity)
-						}
-						.buttonStyle(.borderedProminent)
-						.tint(.green)
-						.padding(.horizontal, 16)
-					
+				}
+				.foregroundStyle(.primary)
+				.padding(16)
+				.frame(width: min(geo.size.width, 520)) // nice max width for larger devices
+				.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+				.background(
+						RoundedRectangle(cornerRadius: 20, style: .continuous)
+								.fill(.background)
+								.shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 6)
+				)
+				.buttonStyle(.plain)
 			}
-			.padding(16)
-			.frame(width: min(geo.size.width, 520)) // nice max width for larger devices
-			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-			.background(
-					RoundedRectangle(cornerRadius: 20, style: .continuous)
-							.fill(.background)
-							.shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 6)
-			)
+			.frame(height: 450)
 		}
-		.frame(height: 450)
 	}
 }
 
