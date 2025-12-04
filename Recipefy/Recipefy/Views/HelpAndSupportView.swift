@@ -13,7 +13,7 @@ struct HelpAndSupportView: View {
     var body: some View {
         ZStack {
             // Background
-            Color(red: 0.98, green: 0.98, blue: 0.97)
+            Color(.systemGroupedBackground)
                 .ignoresSafeArea()
             
             ScrollView {
@@ -144,7 +144,7 @@ private struct FAQItem: View {
                 .lineSpacing(4)
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
