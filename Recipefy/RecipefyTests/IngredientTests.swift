@@ -175,6 +175,41 @@ struct IngredientTests {
     #expect(IngredientCategory.from(string: "protein") == .proteins)
   }
   
+  @Test("Category validation from string - common aliases")
+  func categoryFromStringAliases() {
+    // Vegetable aliases
+    #expect(IngredientCategory.from(string: "veggie") == .vegetables)
+    #expect(IngredientCategory.from(string: "veggies") == .vegetables)
+    #expect(IngredientCategory.from(string: "veg") == .vegetables)
+    
+    // Protein aliases
+    #expect(IngredientCategory.from(string: "meat") == .proteins)
+    #expect(IngredientCategory.from(string: "meats") == .proteins)
+    
+    // Grain aliases
+    #expect(IngredientCategory.from(string: "carb") == .grains)
+    #expect(IngredientCategory.from(string: "carbs") == .grains)
+    #expect(IngredientCategory.from(string: "carbohydrate") == .grains)
+    #expect(IngredientCategory.from(string: "carbohydrates") == .grains)
+    
+    // Seasoning aliases
+    #expect(IngredientCategory.from(string: "spice") == .seasonings)
+    #expect(IngredientCategory.from(string: "spices") == .seasonings)
+    #expect(IngredientCategory.from(string: "herb") == .seasonings)
+    #expect(IngredientCategory.from(string: "herbs") == .seasonings)
+    
+    // Oil aliases
+    #expect(IngredientCategory.from(string: "oils") == .oil)
+    #expect(IngredientCategory.from(string: "fat") == .oil)
+    #expect(IngredientCategory.from(string: "fats") == .oil)
+  }
+  
+  @Test("Category validation from string - whitespace handling")
+  func categoryFromStringWhitespace() {
+    #expect(IngredientCategory.from(string: " vegetables ") == .vegetables)
+    #expect(IngredientCategory.from(string: "  proteins  ") == .proteins)
+  }
+  
   @Test("Category validation from string - invalid defaults to other")
   func categoryFromStringInvalid() {
     #expect(IngredientCategory.from(string: "Fruits") == .other)
