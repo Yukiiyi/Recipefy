@@ -15,6 +15,8 @@ final class AuthController: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var isAuthenticated = false
+    @Published var showLanding = true  // Show landing page on initial load
+    @Published var startInLoginMode = true  // true = Login, false = Sign Up
     
     // MARK: - Mock Authentication (MVP)
     
@@ -26,6 +28,7 @@ final class AuthController: ObservableObject {
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
         
         // Mock success - always authenticate
+        showLanding = false
         isAuthenticated = true
         isLoading = false
         
@@ -40,6 +43,7 @@ final class AuthController: ObservableObject {
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
         
         // Mock success - always authenticate
+        showLanding = false
         isAuthenticated = true
         isLoading = false
         
@@ -54,6 +58,7 @@ final class AuthController: ObservableObject {
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
         
         // Mock success
+        showLanding = false
         isAuthenticated = true
         isLoading = false
         
@@ -70,6 +75,7 @@ final class AuthController: ObservableObject {
             try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
             
             // Mock success
+            showLanding = false
             isAuthenticated = true
             isLoading = false
             
@@ -84,6 +90,7 @@ final class AuthController: ObservableObject {
     
     func signOut() {
         isAuthenticated = false
+        showLanding = true  // Show landing page after logout
         errorMessage = nil
         print("User signed out")
     }

@@ -8,14 +8,36 @@
 import Foundation
 import UIKit
 import FirebaseAI
+import FirebaseAuth
+import FirebaseFirestore
 
 class GeminiService {
   private let model: GenerativeModel
+  private let db = Firestore.firestore()
   
   init() {
     let ai = FirebaseAI.firebaseAI(backend: .googleAI())
     self.model = ai.generativeModel(modelName: "gemini-2.5-flash")
     print("✅ GeminiService initialized with Gemini 2.5 Flash")
+  }
+  
+  // MARK: - Load User Preferences
+  private func loadDietaryPreferences() async -> DietaryPreferences? {
+    guard let uid = Auth.auth().currentUser?.uid else {
+      return nil
+    }
+    
+    do {
+      let document = try await db.collection("users").document(uid).collection("preferences").document("dietary").getDocument()
+      
+      if let data = document.data() {
+        return DietaryPreferences.fromFirestore(data)
+      }
+    } catch {
+      print("Error loading dietary preferences: \(error)")
+    }
+    
+    return nil
   }
   
   func analyzeIngredients(image: UIImage) async throws -> [Ingredient] {
@@ -71,10 +93,28 @@ class GeminiService {
   }
 	
 	func getRecipe(ingredients: [String]) async throws -> [Recipe] {
-		let prompt = """
+		// Load user's dietary preferences
+		let preferences = await loadDietaryPreferences()
+		
+		// Build base prompt
+		var prompt = """
 		This is a list of the available ingredients: \(ingredients)
+		"""
+		
+		// Add dietary preferences if they exist
+		if let preferences = preferences {
+			prompt += preferences.toPromptString()
+			print("🍽️ DIETARY PREFERENCES LOADED:")
+			print(preferences.toPromptString())
+		} else {
+			print("ℹ️ No dietary preferences found - generating recipes without restrictions")
+		}
+		
+		// Continue with recipe generation instructions
+		prompt += """
+		
 		Provide 3 unique recipes that can be made using only the amount of ingredients listed. 
-		For each recipe, provide the name, calories, serving size, list of preparation steps (e.g. ["Boil water and cook pasta according to package directions", "Heat olive oil in a large pan over medium heat", ...]) , preparation time in minutes,  list of ingredients used (e.g. ["1 cup tomatoes", "1 lb Chicken Breast", ...]) , nutrition information in a map which contains the amount of carbs, fat, fiber, sugar, protein, and a description.
+		For each recipe, provide the name, calories, serving size, list of preparation steps (e.g. ["Boil water and cook pasta according to package directions", "Heat olive oil in a large pan over medium heat", ...]) , preparation time in minutes,  list of ingredients used (e.g. ["1 cup tomatoes", "1 lb Chicken Breast", ...]) , nutrition information in a map which contains the amount of carbs, fat, fiber, protein, and a description.
 		
 		Return the result as a JSON array with this exact format:
 		[
@@ -99,6 +139,10 @@ class GeminiService {
 		All fields with the tag "_as_an_integer" should be of type Integer.
 		Return ONLY the JSON array, no additional text.
 		"""
+		
+		print("📤 SENDING PROMPT TO AI:")
+		print(prompt)
+		print(String(repeating: "=", count: 80))
 		
 		let response = try await model.generateContent(prompt)
 		guard let text = response.text else {
