@@ -12,7 +12,7 @@ struct TermsOfServiceView: View {
     
     var body: some View {
         ZStack {
-            Color(red: 0.98, green: 0.98, blue: 0.97).ignoresSafeArea()
+            Color(.systemGroupedBackground).ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 24) {

@@ -46,7 +46,7 @@ struct RecipeTests {
 	@Test
 	func recipe_initFromRawRecipe_mapsAllFields() async throws {
 		// Given
-		let nutrition = Nutrition(protein: 25, carbs: 50, fat: 10, fiber: 6, description: "Balanced meal")
+		let nutrition = Nutrition(protein: 25, carbs: 50, fat: 10, fiber: 6, sugar: 8, description: "Balanced meal")
 		let raw = RawRecipe(
 				title: "Test Bowl",
 				ingredients: ["1 cup rice", "200g chicken", "1 tbsp oil"],
@@ -72,6 +72,7 @@ struct RecipeTests {
 		#expect(mapped.carbs == 50)
 		#expect(mapped.fat == 10)
 		#expect(mapped.fiber == 6)
+		#expect(mapped.sugar == 8)
 
 		// UUID should be generated and non-empty
 		#expect(!mapped.recipeID.isEmpty)

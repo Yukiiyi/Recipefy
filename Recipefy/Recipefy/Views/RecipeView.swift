@@ -115,7 +115,7 @@ struct RecipeCard: View {
 				.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 				.background(
 						RoundedRectangle(cornerRadius: 20, style: .continuous)
-								.fill(.background)
+								.fill(Color(.secondarySystemGroupedBackground))
 								.shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 6)
 				)
 				.buttonStyle(.plain)
