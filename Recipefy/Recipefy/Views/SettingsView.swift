@@ -32,14 +32,6 @@ struct SettingsView: View {
                                     title: "Edit Profile",
                                     subtitle: "Name, Email , Password")
                     }
-                    
-                    Divider()
-                    
-                    NavigationLink(destination: NotificationsView()) {
-                        SettingsRow(icon: "bell.fill", iconColor: .green,
-                                    title: "Notifications",
-                                    subtitle: "Recipe Suggestions, updates")
-                    }
                 }
                 .background(Color.white)
                 .cornerRadius(12)
@@ -62,18 +54,6 @@ struct SettingsView: View {
                     SettingsRow(icon: "heart.fill", iconColor: .green,
                                 title: "Saved Recipes",
                                 subtitle: "3 recipes")
-                    
-                    Divider()
-                    
-                    SettingsRow(icon: "list.bullet", iconColor: .green,
-                                title: "My Ingredients",
-                                subtitle: "Manage pantry")
-                    
-                    Divider()
-                    
-                    SettingsRow(icon: "clock.fill", iconColor: .green,
-                                title: "Recipe History",
-                                subtitle: "Recipes viewed")
                 }
                 .background(Color.white)
                 .cornerRadius(12)
