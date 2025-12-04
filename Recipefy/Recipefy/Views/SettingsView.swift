@@ -34,20 +34,17 @@ struct SettingsView: View {
                 // MARK: - Account Section
                 sectionHeader("Account")
                 VStack(spacing: 0) {
-                    SettingsRow(icon: "person.fill", iconColor: .green,
-                                title: "Edit Profile",
-                                subtitle: "Name, Email , Password")
                     
-                    divider
-                    
-                    SettingsRow(icon: "bell.fill", iconColor: .green,
-                                title: "Notifications",
-                                subtitle: "Recipe Suggestions, updates")
+                    NavigationLink(destination: EditProfileView()) {
+                        SettingsRow(icon: "person.fill", iconColor: .green,
+                                    title: "Edit Profile",
+                                    subtitle: "Name, Email , Password")
+                    }
                 }
-                .background(Color.white)
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
                 .padding(.horizontal)
-
+                
                 // MARK: - Dietary Preferences Section
                 sectionHeader("Dietary Preferences")
                 VStack(spacing: 0) {
@@ -65,43 +62,40 @@ struct SettingsView: View {
                 // MARK: - Content Section
                 sectionHeader("Content")
                 VStack(spacing: 0) {
-                    SettingsRow(icon: "heart.fill", iconColor: .green,
-                                title: "Saved Recipes",
-                                subtitle: "3 recipes")
-                    
-                    divider
-                    
-                    SettingsRow(icon: "list.bullet", iconColor: .green,
-                                title: "My Ingredients",
-                                subtitle: "Manage pantry")
-                    
-                    divider
-                    
-                    SettingsRow(icon: "clock.fill", iconColor: .green,
-                                title: "Recipe History",
-                                subtitle: "Recipe viewed")
+                    NavigationLink(destination: FavoriteRecipesView()) {
+                        SettingsRow(icon: "heart.fill", iconColor: .green,
+                                    title: "Saved Recipes",
+                                    subtitle: "Your favorites")
+                    }
                 }
-                .background(Color.white)
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
                 .padding(.horizontal)
                 
                 // MARK: - Preferences Section
                 sectionHeader("Preferences")
                 VStack(spacing: 0) {
-                    SettingsRow(icon: "questionmark.circle.fill", iconColor: .green,
-                                title: "Help & Support")
                     
-                    divider
+                    NavigationLink(destination: HelpAndSupportView()) {
+                        SettingsRow(icon: "questionmark.circle.fill", iconColor: .green,
+                                    title: "Help & Support")
+                    }
                     
-                    SettingsRow(icon: "shield.fill", iconColor: .green,
-                                title: "Privacy Policy")
+                    Divider()
                     
-                    divider
+                    NavigationLink(destination: PrivacyPolicyView()) {
+                        SettingsRow(icon: "shield.fill", iconColor: .green,
+                                    title: "Privacy Policy")
+                    }
                     
-                    SettingsRow(icon: "doc.text.fill", iconColor: .green,
-                                title: "Terms of Service")
+                    Divider()
+                    
+                    NavigationLink(destination: TermsOfServiceView()) {
+                        SettingsRow(icon: "doc.text.fill", iconColor: .green,
+                                    title: "Terms of Service")
+                    }
                 }
-                .background(Color.white)
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
                 .padding(.horizontal)
                 
@@ -111,7 +105,7 @@ struct SettingsView: View {
                     .padding(.bottom, 40)
             }
         }
-        .background(Color(red: 0.98, green: 0.98, blue: 0.97))
+        .background(Color(.systemGroupedBackground))
         .navigationBarHidden(true)
         .task {
             await loadStats()
@@ -148,9 +142,7 @@ struct SettingsView: View {
     }
 }
 
-//
 // MARK: - Profile Card
-//
 private extension SettingsView {
 
     var profileCard: some View {
@@ -181,7 +173,7 @@ private extension SettingsView {
         }
         .padding(.vertical, 20)
         .frame(maxWidth: .infinity)
-        .background(Color.white)
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(20)
         .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 3)
         .padding(.horizontal)
@@ -199,9 +191,7 @@ private extension SettingsView {
     }
 }
 
-//
 // MARK: - Section Header
-//
 private extension SettingsView {
     func sectionHeader(_ text: String) -> some View {
         Text(text)
@@ -211,19 +201,7 @@ private extension SettingsView {
     }
 }
 
-//
-// MARK: - Row Divider
-//
-private extension SettingsView {
-    var divider: some View {
-        Divider()
-            .padding(.leading, 56)
-    }
-}
-
-//
 // MARK: - Logout Button
-//
 private extension SettingsView {
     var logoutButton: some View {
         Button {
@@ -243,9 +221,7 @@ private extension SettingsView {
     }
 }
 
-//
-// MARK: - Reusable Settings Row Component
-//
+// MARK: - Reusable Row
 struct SettingsRow: View {
     var icon: String
     var iconColor: Color = .green
@@ -281,9 +257,7 @@ struct SettingsRow: View {
     }
 }
 
-//
 // MARK: - Preview
-//
 #Preview {
     NavigationStack {
         SettingsView()

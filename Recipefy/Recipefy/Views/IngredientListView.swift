@@ -32,67 +32,130 @@ struct IngredientListView: View {
   
   var body: some View {
     VStack(spacing: 0) {
-      // Only show status when analyzing or there's an error
-      if controller.isAnalyzing || (controller.currentIngredients == nil && !controller.statusText.isEmpty) {
-        HStack(spacing: 8) {
-          if controller.isAnalyzing {
-            ProgressView().scaleEffect(0.8)
-          }
-          Text(controller.statusText).font(.footnote).foregroundStyle(.secondary)
+      // Full-screen loading state when analyzing
+      if controller.isAnalyzing {
+        VStack(spacing: 20) {
+          Spacer()
+          
+          // Animated icon
+          Image(systemName: "sparkle.magnifyingglass")
+            .font(.system(size: 56))
+            .foregroundStyle(.green)
+            .symbolEffect(.pulse)
+          
+          Text("Identifying Ingredients")
+            .font(.title2)
+            .fontWeight(.semibold)
+            .foregroundStyle(.primary)
+          
+          Text(controller.statusText)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+          
+          ProgressView()
+            .scaleEffect(1.2)
+            .padding(.top, 8)
+          
+          Spacer()
         }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .background(Color.blue.opacity(0.1))
-        .cornerRadius(12)
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else if controller.currentIngredients == nil && !controller.statusText.isEmpty {
+        // Error or non-analyzing status
+        VStack(spacing: 12) {
+          Spacer()
+          Image(systemName: "exclamationmark.triangle")
+            .font(.system(size: 40))
+            .foregroundStyle(.orange)
+          Text(controller.statusText)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 32)
+          Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
       
-      if let ingredients = controller.currentIngredients {
+      // Empty state when all ingredients have been deleted
+      if let ingredients = controller.currentIngredients, ingredients.isEmpty, !controller.isAnalyzing {
+        VStack(spacing: 16) {
+          Spacer()
+          
+          Image(systemName: "leaf.circle")
+            .font(.system(size: 48))
+            .foregroundStyle(.green)
+          
+          Text("No Ingredients")
+            .font(.title3)
+            .fontWeight(.semibold)
+            .foregroundStyle(.primary)
+          
+          Text("Tap + to add ingredients manually\nor scan new items")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+          
+          Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      }
+      
+      if let ingredients = controller.currentIngredients, !ingredients.isEmpty, !controller.isAnalyzing {
         VStack(spacing: 0) {
+          // Compact summary at top - aligned with list content
+          Text("\(ingredients.count) ingredients detected")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 32)
+            .padding(.trailing, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 4)
+          
           List {
-            Section {
-              ForEach(ingredients) { ingredient in
-              HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                  Text(ingredient.name.capitalized)
-                    .font(.body)
-                    .fontWeight(.medium)
-                  HStack(spacing: 8) {
-                    Text(ingredient.amount)
-                      .font(.subheadline)
-                      .foregroundStyle(.secondary)
-                    Text("•")
-                      .font(.caption)
-                      .foregroundStyle(.secondary)
-                    Text(ingredient.category.rawValue)
-                      .font(.caption)
-                      .fontWeight(.medium)
-                      .foregroundStyle(.secondary)
-                      .padding(.horizontal, 8)
-                      .padding(.vertical, 4)
-                      .background(Color.gray.opacity(0.2))
-                      .cornerRadius(6)
+            // Group by category
+            ForEach(IngredientCategory.allCases, id: \.self) { category in
+              let categoryIngredients = ingredients.filter { $0.category == category }
+              
+              if !categoryIngredients.isEmpty {
+                Section {
+                  ForEach(categoryIngredients) { ingredient in
+                    HStack(spacing: 12) {
+                      VStack(alignment: .leading, spacing: 4) {
+                        Text(ingredient.name.capitalized)
+                          .font(.body)
+                          .fontWeight(.medium)
+                        Text(ingredient.amount)
+                          .font(.subheadline)
+                          .foregroundStyle(.secondary)
+                      }
+                      
+                      Spacer()
+                      
+                      Button(action: {
+                        ingredientToEdit = ingredient
+                        showingEditForm = true
+                      }) {
+                        Image(systemName: "square.and.pencil")
+                          .font(.title2)
+                          .foregroundStyle(.green)
+                      }
+                    }
+                    .padding(.vertical, 4)
                   }
-                }
-                
-                Spacer()
-                
-                Button(action: {
-                  ingredientToEdit = ingredient
-                  showingEditForm = true
-                }) {
-                  Image(systemName: "square.and.pencil")
-                    .font(.title2)
-                    .foregroundStyle(.green)
+                  .onDelete { indexSet in
+                    deleteIngredientsFromCategory(categoryIngredients, at: indexSet)
+                  }
+                } header: {
+                  HStack(spacing: 6) {
+                    Image(systemName: categoryIcon(for: category))
+                      .foregroundStyle(.green)
+                    Text(category.rawValue)
+                  }
+                  .font(.subheadline.weight(.semibold))
+                  .textCase(nil)
                 }
               }
-              .padding(.vertical, 8)
-            }
-            .onDelete(perform: deleteIngredients)
-            } header: {
-              Text("\(ingredients.count) Ingredients Detected")
-                .font(.subheadline)
-                .textCase(nil)
             }
           }
           .listStyle(.insetGrouped)
@@ -130,6 +193,7 @@ struct IngredientListView: View {
         }
       }
     }
+    .background(Color(.systemGroupedBackground))
     .navigationTitle("Ingredients")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
@@ -175,17 +239,26 @@ struct IngredientListView: View {
     }
   }
   
-  private func deleteIngredients(at offsets: IndexSet) {
-    guard let ingredients = controller.currentIngredients else { return }
+  private func deleteIngredientsFromCategory(_ categoryIngredients: [Ingredient], at offsets: IndexSet) {
+    // Get the ingredients to delete from the filtered category list
+    let ingredientsToDelete = offsets.map { categoryIngredients[$0] }
     
-    // Capture ingredients to delete before starting async operations
-    let ingredientsToDelete = offsets.map { ingredients[$0] }
-    
-    // Delete sequentially to avoid race conditions
     Task {
       for ingredient in ingredientsToDelete {
         await controller.deleteIngredient(scanId: scanId, ingredient: ingredient)
       }
+    }
+  }
+  
+  private func categoryIcon(for category: IngredientCategory) -> String {
+    switch category {
+    case .vegetables: return "carrot.fill"
+    case .proteins: return "fish.fill"
+    case .grains: return "laurel.leading"
+    case .dairy: return "cup.and.saucer.fill"
+    case .seasonings: return "leaf.fill"
+    case .oil: return "drop.fill"
+    case .other: return "ellipsis.circle.fill"
     }
   }
   

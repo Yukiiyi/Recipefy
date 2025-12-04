@@ -57,13 +57,13 @@ class GeminiService {
       {
         "name": "ingredient name",
         "quantity": "2",
-        "unit": "cup",
+        "unit": "appropriate category from hte list above",
         "category": "appropriate category from the list above"
       }
     ]
     
     Important:
-    - "quantity" should be ONLY the numeric value (e.g., "2", "1.5", "500", "1/4", "0.5"). Use fractions and decimals where appropriate for their unit.
+    - "quantity" should be ONLY the numeric value (e.g., "2", "1.5", "500", "1/4", "0.5"). Use fractions and decimals where appropriate for their measurement unit.
     - "unit" should be ONLY the unit from the approved list above
     - If you cannot determine the exact amount, make a reasonable estimate based on what you see
     
@@ -113,7 +113,7 @@ class GeminiService {
 		// Continue with recipe generation instructions
 		prompt += """
 		
-		Provide 5 unique recipes that can be made using only the amount of ingredients listed. 
+		Provide 3 unique recipes that can be made using only the amount of ingredients listed. 
 		For each recipe, provide the name, calories, serving size, list of preparation steps (e.g. ["Boil water and cook pasta according to package directions", "Heat olive oil in a large pan over medium heat", ...]) , preparation time in minutes,  list of ingredients used (e.g. ["1 cup tomatoes", "1 lb Chicken Breast", ...]) , nutrition information in a map which contains the amount of carbs, fat, fiber, protein, and a description.
 		
 		Return the result as a JSON array with this exact format:
@@ -129,6 +129,7 @@ class GeminiService {
 					"fat": fat_as_an_integer, 
 					"fiber": fiber_as_an_integer, 
 					"protein": protein_as_an_integer, 
+					"sugar": sugar_as_an_integer,
 					"description": "description text"
 				},
 				"steps": ["list", "of", "preparation", "steps"]

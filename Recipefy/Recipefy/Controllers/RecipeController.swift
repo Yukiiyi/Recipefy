@@ -15,13 +15,16 @@ import Combine
 final class RecipeController: ObservableObject {
 	@Published var statusText = "Idle"
   @Published var currentRecipes: [Recipe]?
+	@Published var favoriteRecipes: [Recipe]?
 	@Published var isRetrieving = false
 	@Published var isSaving = false
 	@Published var saveSuccess = false
 	@Published var lastGeneratedScanId: String?
+	@Published var isLoadingMore = false
     
   private let geminiService = GeminiService()
 	private let db = Firestore.firestore()
+	private var lastFormattedIngredients: [String] = []
 	
 	func getRecipe(ingredients: [Ingredient], sourceScanId: String? = nil) async {
 		let ingredientsData = ingredients.map { $0.toDictionary() }
@@ -33,7 +36,10 @@ final class RecipeController: ObservableObject {
 					 return nil
 			 }
 		}
+		lastFormattedIngredients = formattedIngredients
+		
 		isRetrieving = true
+		isLoadingMore = false
 		currentRecipes = nil
 		statusText = "Generating Recipes with AI..."
 		
@@ -51,14 +57,19 @@ final class RecipeController: ObservableObject {
 		} catch {
 			currentRecipes = nil
 			statusText = "Error: \(error.localizedDescription)"
+			print(statusText)
 			isRetrieving = false
 		}
 	}
 	
 	/// Saves recipes to Firestore under the current user's collection
-	/// - Parameter sourceScanId: Optional scan ID that generated these recipes
-	func saveRecipes(sourceScanId: String? = nil) async {
-		guard let recipes = currentRecipes else {
+	/// - Parameters:
+	///   - recipes: Specific recipes to save. If nil, saves all currentRecipes.
+	///   - sourceScanId: Optional scan ID that generated these recipes
+	func saveRecipes(_ recipes: [Recipe]? = nil, sourceScanId: String? = nil) async {
+		let recipesToSave = recipes ?? currentRecipes
+		
+		guard let recipesToSave, !recipesToSave.isEmpty else {
 			statusText = "No recipes to save"
 			return
 		}
@@ -71,34 +82,15 @@ final class RecipeController: ObservableObject {
 		isSaving = true
 		
 		do {
-			// Save each recipe to top-level recipes collection
-			for recipe in recipes {
-				let recipeData: [String: Any] = [
-					"title": recipe.title,
-					"description": recipe.description,
-					"ingredients": recipe.ingredients,
-					"steps": recipe.steps,
-					"calories": recipe.calories,
-					"servings": recipe.servings,
-					"cookMin": recipe.cookMin,
-					"protein": recipe.protein,
-					"carbs": recipe.carbs,
-					"fat": recipe.fat,
-					"fiber": recipe.fiber,
-					"createdBy": userId,
-					"sourceScanId": sourceScanId ?? "",
-					"createdAt": Timestamp(date: Date())
-				]
-				
+			for recipe in recipesToSave {
+				let recipeData = makeFirestoreData(for: recipe, userId: userId, sourceScanId: sourceScanId)
 				let _ = try await db.collection("recipes")
 					.addDocument(data: recipeData)
 			}
 			
-			// Don't overwrite statusText - keep the "Found X recipes!" message
 			saveSuccess = true
-			print("✅ Saved \(recipes.count) recipes to Firestore")
+			print("✅ Saved \(recipesToSave.count) recipes to Firestore")
 		} catch {
-			// Only update status on error
 			statusText = "Save error: \(error.localizedDescription)"
 			saveSuccess = false
 			print("❌ Failed to save recipes: \(error)")
@@ -163,6 +155,9 @@ final class RecipeController: ObservableObject {
 					return nil
 				}
 				
+				let sugar = data["sugar"] as? Int ?? 0
+				let favorited = data["favorited"] as? Bool ?? false
+				
 				// Create Recipe object with document ID as recipeID
 				return Recipe(
 					recipeID: doc.documentID,
@@ -176,7 +171,9 @@ final class RecipeController: ObservableObject {
 					protein: protein,
 					carbs: carbs,
 					fat: fat,
-					fiber: fiber
+					fiber: fiber,
+					sugar: sugar,
+					favorited: favorited
 				)
 			}
 			
@@ -190,6 +187,152 @@ final class RecipeController: ObservableObject {
 			isRetrieving = false
 			print("❌ Load recipes error: \(error.localizedDescription)")
 		}
+	}
+
+	func toggleFavorite(for recipeID: String) {
+		// Flip in currentRecipes
+		if let index = currentRecipes?.firstIndex(where: { $0.recipeID == recipeID }) {
+			currentRecipes?[index].favorited.toggle()
+		}
+		
+		// Flip in favoriteRecipes
+		if let index = favoriteRecipes?.firstIndex(where: { $0.recipeID == recipeID }) {
+			favoriteRecipes?[index].favorited.toggle()
+		}
+		
+		// Figure out the new value
+		let newValue =
+			currentRecipes?.first(where: { $0.recipeID == recipeID })?.favorited ??
+			favoriteRecipes?.first(where: { $0.recipeID == recipeID })?.favorited ??
+			false
+		
+		// Persist to Firestore
+		Task {
+			do {
+				try await db.collection("recipes")
+					.document(recipeID)
+					.updateData(["favorited": newValue])
+			} catch {
+					print("❌ Failed to update favorite: \(error.localizedDescription)")
+			}
+		}
+	}
+	
+	func loadFavoriteRecipes() async {
+		guard let userId = Auth.auth().currentUser?.uid else {
+			statusText = "No authenticated user"
+			return
+		}
+		
+		isRetrieving = true
+		statusText = "Loading favorites..."
+		
+		do {
+			let snapshot = try await db.collection("recipes")
+					.whereField("createdBy", isEqualTo: userId)
+					.whereField("favorited", isEqualTo: true)
+					.order(by: "createdAt", descending: true)
+					.getDocuments()
+			
+			let recipes = snapshot.documents.compactMap { doc -> Recipe? in
+				let data = doc.data()
+				
+				guard let title = data["title"] as? String,
+					let description = data["description"] as? String,
+					let ingredients = data["ingredients"] as? [String],
+					let steps = data["steps"] as? [String],
+					let calories = data["calories"] as? Int,
+					let servings = data["servings"] as? Int,
+					let cookMin = data["cookMin"] as? Int,
+					let protein = data["protein"] as? Int,
+					let carbs = data["carbs"] as? Int,
+					let fat = data["fat"] as? Int,
+					let fiber = data["fiber"] as? Int
+				else {
+					return nil
+				}
+					
+				let sugar = data["sugar"] as? Int ?? 0
+				let favorited = data["favorited"] as? Bool ?? false
+					
+				return Recipe(
+					recipeID: doc.documentID,
+					title: title,
+					description: description,
+					ingredients: ingredients,
+					steps: steps,
+					calories: calories,
+					servings: servings,
+					cookMin: cookMin,
+					protein: protein,
+					carbs: carbs,
+					fat: fat,
+					fiber: fiber,
+					sugar: sugar,
+					favorited: favorited
+				)
+			}
+			
+			favoriteRecipes = recipes
+			statusText = recipes.isEmpty ? "No favorites yet" : "Loaded \(recipes.count) favorites"
+		} catch {
+			favoriteRecipes = []
+			statusText = "Failed to load favorites"
+			print("❌ Load favorites error: \(error.localizedDescription)")
+		}
+		
+		isRetrieving = false
+	}
+	
+	func loadMoreRecipesIfNeeded() async {
+			// Don't re-enter while already loading, or if we have nothing to use
+			guard !isRetrieving, !isLoadingMore, !lastFormattedIngredients.isEmpty else {
+				return
+			}
+			
+			isLoadingMore = true
+			
+			do {
+				let moreRecipes = try await geminiService.getRecipe(ingredients: lastFormattedIngredients)
+				
+				if currentRecipes == nil {
+					currentRecipes = moreRecipes
+				} else {
+					currentRecipes?.append(contentsOf: moreRecipes)
+				}
+
+				Task {
+					await self.saveRecipes(moreRecipes, sourceScanId: self.lastGeneratedScanId)
+				}
+			} catch {
+				print("❌ Failed to load more recipes: \(error.localizedDescription)")
+			}
+			
+			isLoadingMore = false
+		}
+	
+	// MARK: - Private Helpers
+	
+	/// Converts a Recipe to Firestore-compatible dictionary
+	private func makeFirestoreData(for recipe: Recipe, userId: String, sourceScanId: String?) -> [String: Any] {
+		return [
+			"title": recipe.title,
+			"description": recipe.description,
+			"ingredients": recipe.ingredients,
+			"steps": recipe.steps,
+			"calories": recipe.calories,
+			"servings": recipe.servings,
+			"cookMin": recipe.cookMin,
+			"protein": recipe.protein,
+			"carbs": recipe.carbs,
+			"fat": recipe.fat,
+			"fiber": recipe.fiber,
+			"sugar": recipe.sugar,
+			"createdBy": userId,
+			"sourceScanId": sourceScanId ?? "",
+			"favorited": recipe.favorited,
+			"createdAt": Timestamp(date: Date())
+		]
 	}
 }
 
