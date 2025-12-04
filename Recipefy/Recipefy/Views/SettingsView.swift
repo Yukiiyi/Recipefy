@@ -33,7 +33,7 @@ struct SettingsView: View {
                                     subtitle: "Name, Email , Password")
                     }
                 }
-                .background(Color.white)
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
                 .padding(.horizontal)
                 
@@ -44,18 +44,20 @@ struct SettingsView: View {
                                 title: "Dietary Preferences",
                                 subtitle: "Allergies, Restrictions")
                 }
-                .background(Color.white)
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
                 .padding(.horizontal)
                 
                 // MARK: - Content Section
                 sectionHeader("Content")
                 VStack(spacing: 0) {
-                    SettingsRow(icon: "heart.fill", iconColor: .green,
-                                title: "Saved Recipes",
-                                subtitle: "3 recipes")
+                    NavigationLink(destination: FavoriteRecipesView()) {
+                        SettingsRow(icon: "heart.fill", iconColor: .green,
+                                    title: "Saved Recipes",
+                                    subtitle: "Your favorites")
+                    }
                 }
-                .background(Color.white)
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
                 .padding(.horizontal)
                 
@@ -82,7 +84,7 @@ struct SettingsView: View {
                                     title: "Terms of Service")
                     }
                 }
-                .background(Color.white)
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
                 .padding(.horizontal)
                 
@@ -92,7 +94,7 @@ struct SettingsView: View {
                     .padding(.bottom, 40)
             }
         }
-        .background(Color(red: 0.98, green: 0.98, blue: 0.97))
+        .background(Color(.systemGroupedBackground))
         .navigationBarHidden(true)
     }
 }
@@ -128,7 +130,7 @@ private extension SettingsView {
         }
         .padding(.vertical, 20)
         .frame(maxWidth: .infinity)
-        .background(Color.white)
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(20)
         .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 3)
         .padding(.horizontal)
