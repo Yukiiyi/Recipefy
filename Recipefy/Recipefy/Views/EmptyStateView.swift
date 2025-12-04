@@ -59,7 +59,7 @@ struct EmptyStateView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(red: 0.98, green: 0.98, blue: 0.97))
+        .background(Color(.systemGroupedBackground))
     }
 }
 
