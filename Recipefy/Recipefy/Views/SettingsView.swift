@@ -51,9 +51,11 @@ struct SettingsView: View {
                 // MARK: - Content Section
                 sectionHeader("Content")
                 VStack(spacing: 0) {
-                    SettingsRow(icon: "heart.fill", iconColor: .green,
-                                title: "Saved Recipes",
-                                subtitle: "3 recipes")
+                    NavigationLink(destination: FavoriteRecipesView()) {
+                        SettingsRow(icon: "heart.fill", iconColor: .green,
+                                    title: "Saved Recipes",
+                                    subtitle: "Your favorites")
+                    }
                 }
                 .background(Color.white)
                 .cornerRadius(12)
