@@ -63,9 +63,13 @@ final class RecipeController: ObservableObject {
 	}
 	
 	/// Saves recipes to Firestore under the current user's collection
-	/// - Parameter sourceScanId: Optional scan ID that generated these recipes
-	func saveRecipes(sourceScanId: String? = nil) async {
-		guard let recipes = currentRecipes else {
+	/// - Parameters:
+	///   - recipes: Specific recipes to save. If nil, saves all currentRecipes.
+	///   - sourceScanId: Optional scan ID that generated these recipes
+	func saveRecipes(_ recipes: [Recipe]? = nil, sourceScanId: String? = nil) async {
+		let recipesToSave = recipes ?? currentRecipes
+		
+		guard let recipesToSave, !recipesToSave.isEmpty else {
 			statusText = "No recipes to save"
 			return
 		}
@@ -78,36 +82,15 @@ final class RecipeController: ObservableObject {
 		isSaving = true
 		
 		do {
-			// Save each recipe to top-level recipes collection
-			for recipe in recipes {
-				let recipeData: [String: Any] = [
-					"title": recipe.title,
-					"description": recipe.description,
-					"ingredients": recipe.ingredients,
-					"steps": recipe.steps,
-					"calories": recipe.calories,
-					"servings": recipe.servings,
-					"cookMin": recipe.cookMin,
-					"protein": recipe.protein,
-					"carbs": recipe.carbs,
-					"fat": recipe.fat,
-					"fiber": recipe.fiber,
-					"sugar": recipe.sugar,
-					"createdBy": userId,
-					"sourceScanId": sourceScanId ?? "",
-					"favorited": recipe.favorited,
-					"createdAt": Timestamp(date: Date())
-				]
-				
+			for recipe in recipesToSave {
+				let recipeData = makeFirestoreData(for: recipe, userId: userId, sourceScanId: sourceScanId)
 				let _ = try await db.collection("recipes")
 					.addDocument(data: recipeData)
 			}
 			
-			// Don't overwrite statusText - keep the "Found X recipes!" message
 			saveSuccess = true
-			print("✅ Saved \(recipes.count) recipes to Firestore")
+			print("✅ Saved \(recipesToSave.count) recipes to Firestore")
 		} catch {
-			// Only update status on error
 			statusText = "Save error: \(error.localizedDescription)"
 			saveSuccess = false
 			print("❌ Failed to save recipes: \(error)")
@@ -319,7 +302,7 @@ final class RecipeController: ObservableObject {
 				}
 
 				Task {
-					await self.saveRecipes(sourceScanId: self.lastGeneratedScanId)
+					await self.saveRecipes(moreRecipes, sourceScanId: self.lastGeneratedScanId)
 				}
 			} catch {
 				print("❌ Failed to load more recipes: \(error.localizedDescription)")
@@ -327,6 +310,30 @@ final class RecipeController: ObservableObject {
 			
 			isLoadingMore = false
 		}
+	
+	// MARK: - Private Helpers
+	
+	/// Converts a Recipe to Firestore-compatible dictionary
+	private func makeFirestoreData(for recipe: Recipe, userId: String, sourceScanId: String?) -> [String: Any] {
+		return [
+			"title": recipe.title,
+			"description": recipe.description,
+			"ingredients": recipe.ingredients,
+			"steps": recipe.steps,
+			"calories": recipe.calories,
+			"servings": recipe.servings,
+			"cookMin": recipe.cookMin,
+			"protein": recipe.protein,
+			"carbs": recipe.carbs,
+			"fat": recipe.fat,
+			"fiber": recipe.fiber,
+			"sugar": recipe.sugar,
+			"createdBy": userId,
+			"sourceScanId": sourceScanId ?? "",
+			"favorited": recipe.favorited,
+			"createdAt": Timestamp(date: Date())
+		]
+	}
 }
 
 
