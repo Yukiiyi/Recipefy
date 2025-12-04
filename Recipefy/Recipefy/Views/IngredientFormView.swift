@@ -106,7 +106,7 @@ struct IngredientFormView: View {
         } header: {
           Text("Amount")
         } footer: {
-          Text("Enter quantity (e.g., 2, 1.5, 0.25) and select a unit")
+          Text("Enter quantity (e.g., 2, 0.5, 1/4) and select a unit")
             .font(.caption)
             .foregroundStyle(.secondary)
         }

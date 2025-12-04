@@ -52,34 +52,51 @@ final class IngredientController: ObservableObject {
   }
   
   func analyzeMultipleImages(imageDataArray: [Data], scanId: String) async {
+    // Prevent duplicate analysis
+    guard !isAnalyzing else { return }
+    
     isAnalyzing = true
     currentIngredients = nil
-    statusText = "Analyzing ingredients with AI..."
+    let imageCount = imageDataArray.count
+    statusText = "Analyzing \(imageCount) \(imageCount == 1 ? "image" : "images")..."
     
-    do {
-      var allIngredients: [Ingredient] = []
-      
-      // Analyze each image
-      for (index, imageData) in imageDataArray.enumerated() {
-        statusText = "Analyzing image \(index + 1) of \(imageDataArray.count)..."
-        
-        guard let image = UIImage(data: imageData) else {
-          throw IngredientError.invalidImage
+    // Use Task to run the analysis - this survives view lifecycle changes
+    Task { @MainActor in
+      do {
+        // Convert all image data to UIImage first
+        let images: [UIImage] = try imageDataArray.compactMap { data in
+          guard let image = UIImage(data: data) else {
+            throw IngredientError.invalidImage
+          }
+          return image
         }
         
-        let ingredients = try await geminiService.analyzeIngredients(image: image)
-        allIngredients.append(contentsOf: ingredients)
+        // Analyze all images in parallel using TaskGroup
+        let allIngredients: [Ingredient] = try await withThrowingTaskGroup(of: [Ingredient].self) { group in
+          for image in images {
+            group.addTask {
+              try await self.geminiService.analyzeIngredients(image: image)
+            }
+          }
+          
+          var results: [Ingredient] = []
+          for try await ingredients in group {
+            results.append(contentsOf: ingredients)
+          }
+          return results
+        }
+        
+        // Save all ingredients
+        let ingredientCount = allIngredients.count
+        statusText = "Saving \(ingredientCount) \(ingredientCount == 1 ? "ingredient" : "ingredients")..."
+        await saveIngredients(scanId: scanId, ingredients: allIngredients)
+        currentScanId = scanId
+        isAnalyzing = false
+      } catch {
+        currentIngredients = nil
+        statusText = "Error: \(error.localizedDescription)"
+        isAnalyzing = false
       }
-      
-      // Automatically save all ingredients after analysis
-      statusText = "Saving \(allIngredients.count) ingredients..."
-      await saveIngredients(scanId: scanId, ingredients: allIngredients)
-      currentScanId = scanId  // Track which scan these belong to
-      isAnalyzing = false
-    } catch {
-      currentIngredients = nil
-      statusText = "Error: \(error.localizedDescription)"
-      isAnalyzing = false
     }
   }
   
@@ -87,10 +104,15 @@ final class IngredientController: ObservableObject {
     var ingredientsWithIds = ingredients
     
     do {
-      // Save each ingredient as a separate document in the scan's subcollection
       let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
+      let batch = db.batch()
       
+      // Create document references and add to batch
       for (index, ingredient) in ingredientsWithIds.enumerated() {
+        // Generate document reference with auto-ID before batch commit
+        let docRef = ingredientsCollection.document()
+        ingredientsWithIds[index].id = docRef.documentID
+        
         let ingredientData = createIngredientData(
           name: ingredient.name,
           quantity: ingredient.quantity,
@@ -98,11 +120,12 @@ final class IngredientController: ObservableObject {
           category: ingredient.category
         )
         
-        let docRef = try await ingredientsCollection.addDocument(data: ingredientData)
-        ingredientsWithIds[index].id = docRef.documentID
+        batch.setData(ingredientData, forDocument: docRef)
       }
       
-      // Only set currentIngredients after all IDs are assigned
+      // Single network call to save all ingredients
+      try await batch.commit()
+      
       currentIngredients = ingredientsWithIds
       saveSuccess = true
     } catch {

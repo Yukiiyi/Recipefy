@@ -10,6 +10,7 @@ import AuthenticationServices
 
 struct AuthView: View {
     @EnvironmentObject var controller: AuthController
+    @Environment(\.colorScheme) var colorScheme
     @State private var isLoginMode = true
     @State private var username = ""
     @State private var email = "sampleUser@andrew.cmu.edu"
@@ -19,7 +20,7 @@ struct AuthView: View {
 
     var body: some View {
         ZStack {
-            Color(red: 0.98, green: 0.98, blue: 0.97).ignoresSafeArea()
+            Color(.systemGroupedBackground).ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: 32) {
@@ -65,14 +66,14 @@ struct AuthView: View {
                             
                             Text(isLoginMode ? "Sign in with Google" : "Sign up with Google")
                                 .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.black)
+                                .foregroundColor(.primary)
                         }
                         .frame(maxWidth: .infinity) 
                         .frame(height: 50)
-                        .background(Color.white)
+                        .background(Color(.secondarySystemGroupedBackground))
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.35), lineWidth: 1)
+                                .stroke(Color.primary.opacity(0.2), lineWidth: 1)
                         )
                         .cornerRadius(8)
                         .contentShape(Rectangle())
@@ -88,10 +89,11 @@ struct AuthView: View {
                                 Task { await controller.handleAppleSignIn(result: result) }
                             }
                         )
-                        .signInWithAppleButtonStyle(.black)
+                        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
                         .frame(height: 50)
                         .cornerRadius(12)
                         .disabled(controller.isLoading)
+                        .id(colorScheme) // Forces button to recreate when mode changes
                     }
                     .padding(.horizontal)
 
@@ -198,7 +200,7 @@ private struct LabeledField<Content: View>: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Color.white)
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
             .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         }

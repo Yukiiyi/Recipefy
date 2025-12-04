@@ -13,7 +13,7 @@ struct HomeView: View {
   var body: some View {
     ZStack {
       // Background that extends to edges
-      Color(red: 0.98, green: 0.98, blue: 0.97)
+      Color(.systemGroupedBackground)
         .ignoresSafeArea(.all)
       
       ScrollView {
@@ -49,7 +49,7 @@ struct HomeView: View {
               .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
               .frame(maxWidth: .infinity)
               .padding(.vertical, 14)
-              .background(Color.white)
+              .background(Color(.systemBackground))
               .cornerRadius(12)
             }
             .buttonStyle(.plain)
@@ -69,6 +69,15 @@ struct HomeView: View {
               .foregroundColor(.primary)
               .padding(.horizontal)
             
+            // Saved Recipes Row
+          NavigationLink(destination: FavoriteRecipesView()) {
+            QuickActionRow(
+              icon: "heart.fill",
+              title: "Saved Recipes",
+              subtitle: "Your Favorite Recipes"
+            )
+          }
+          .buttonStyle(.plain)
           // My Ingredients Row
           NavigationLink(destination: MyIngredientsRouteView()) {
             QuickActionRow(
@@ -78,17 +87,7 @@ struct HomeView: View {
             )
           }
           .buttonStyle(.plain)
-            
-          // Saved Recipes Row
-          NavigationLink(destination: SavedRecipesPlaceholderView()) {
-            QuickActionRow(
-              icon: "heart.fill",
-              title: "Saved Recipes",
-              subtitle: "Your Favorite Recipes"
-            )
-          }
-          .buttonStyle(.plain)
-            
+          
           // Browse Recipes Row
           NavigationLink(destination: BrowseRecipesRouteView()) {
             QuickActionRow(
@@ -149,7 +148,7 @@ struct QuickActionRow: View {
     }
     .padding(.horizontal)
     .padding(.vertical, 14)
-    .background(Color.white)
+    .background(Color(.secondarySystemGroupedBackground))
     .cornerRadius(12)
     .padding(.horizontal)
     .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
@@ -198,19 +197,6 @@ private struct MyIngredientsRouteView: View {
         }
       }
     }
-  }
-}
-
-private struct SavedRecipesPlaceholderView: View {
-  var body: some View {
-    VStack(spacing: 16) {
-      Text("Saved Recipes").font(.title).bold()
-      Text("This is a placeholder saved recipes screen.")
-        .foregroundStyle(.secondary)
-      Spacer()
-    }
-    .padding()
-    .navigationTitle("Saved Recipes")
   }
 }
 
