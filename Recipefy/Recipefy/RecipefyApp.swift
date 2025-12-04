@@ -24,7 +24,12 @@ struct RecipefyApp: App {
 
   var body: some Scene {
     WindowGroup {
-      if authController.isAuthenticated {
+      if authController.showLanding {
+        // Show landing page (initial load or after logout)
+        LandingView(showLanding: $authController.showLanding)
+          .environmentObject(authController)
+      } else if authController.isAuthenticated {
+        // Show main app after authentication
         NavigationBarView()
           .environmentObject(navigationState)
           .environmentObject(authController)
@@ -32,6 +37,7 @@ struct RecipefyApp: App {
           .environmentObject(ingredientController)
           .environmentObject(recipeController)
       } else {
+        // Show authentication view
         NavigationView {
           AuthView()
         }

@@ -6,9 +6,17 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct SettingsView: View {
     @EnvironmentObject var authController: AuthController
+    
+    // Dynamic stats
+    @State private var recipesCount: Int = 0
+    @State private var ingredientsCount: Int = 0
+    @State private var favoritesCount: Int = 0
+    @State private var isLoadingStats: Bool = true
 
     var body: some View {
         ScrollView {
@@ -40,11 +48,14 @@ struct SettingsView: View {
                 // MARK: - Dietary Preferences Section
                 sectionHeader("Dietary Preferences")
                 VStack(spacing: 0) {
-                    SettingsRow(icon: "leaf.fill", iconColor: .green,
-                                title: "Dietary Preferences",
-                                subtitle: "Allergies, Restrictions")
+                    NavigationLink(destination: PreferencesView()) {
+                        SettingsRow(icon: "leaf.fill", iconColor: .green,
+                                    title: "Dietary Preferences",
+                                    subtitle: "Allergies, Restrictions")
+                    }
+                    .buttonStyle(.plain)
                 }
-                .background(Color(.secondarySystemGroupedBackground))
+                .background(Color.white)
                 .cornerRadius(12)
                 .padding(.horizontal)
                 
@@ -96,6 +107,38 @@ struct SettingsView: View {
         }
         .background(Color(.systemGroupedBackground))
         .navigationBarHidden(true)
+        .task {
+            await loadStats()
+        }
+    }
+    
+    // MARK: - Load Stats from Firestore
+    private func loadStats() async {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            isLoadingStats = false
+            return
+        }
+        
+        let db = Firestore.firestore()
+        
+        do {
+            // Load recipes count
+            let recipesSnapshot = try await db.collection("users").document(uid).collection("recipes").getDocuments()
+            recipesCount = recipesSnapshot.documents.count
+            
+            // Load ingredients count
+            let ingredientsSnapshot = try await db.collection("users").document(uid).collection("ingredients").getDocuments()
+            ingredientsCount = ingredientsSnapshot.documents.count
+            
+            // Load favorites count (saved recipes)
+            let favoritesSnapshot = try await db.collection("users").document(uid).collection("favorites").getDocuments()
+            favoritesCount = favoritesSnapshot.documents.count
+            
+        } catch {
+            print("Error loading stats: \(error)")
+        }
+        
+        isLoadingStats = false
     }
 }
 
@@ -122,9 +165,9 @@ private extension SettingsView {
                 .foregroundColor(.secondary)
             
             HStack(spacing: 32) {
-                profileStat(number: "12", label: "Recipes")
-                profileStat(number: "45", label: "Cooked")
-                profileStat(number: "3", label: "Favorites")
+                profileStat(number: "\(recipesCount)", label: "Recipes")
+                profileStat(number: "\(ingredientsCount)", label: "Ingredients")
+                profileStat(number: "\(favoritesCount)", label: "Favorites")
             }
             .padding(.top, 4)
         }

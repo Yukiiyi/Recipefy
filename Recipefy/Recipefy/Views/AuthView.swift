@@ -16,6 +16,7 @@ struct AuthView: View {
     @State private var email = "sampleUser@andrew.cmu.edu"
     @State private var password = "123456"
     @State private var confirmPassword = ""
+    @State private var hasSetInitialMode = false
 
     var body: some View {
         ZStack {
@@ -171,6 +172,13 @@ struct AuthView: View {
             }
         }
         .navigationBarHidden(true)
+        .onAppear {
+            // Set initial mode based on how user navigated from landing page
+            if !hasSetInitialMode {
+                isLoginMode = controller.startInLoginMode
+                hasSetInitialMode = true
+            }
+        }
     }
 }
 
