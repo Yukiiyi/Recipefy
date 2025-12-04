@@ -80,7 +80,7 @@ struct HomeView: View {
           .buttonStyle(.plain)
             
           // Saved Recipes Row
-          NavigationLink(destination: SavedRecipesPlaceholderView()) {
+          NavigationLink(destination: FavoriteRecipesView()) {
             QuickActionRow(
               icon: "heart.fill",
               title: "Saved Recipes",
@@ -198,19 +198,6 @@ private struct MyIngredientsRouteView: View {
         }
       }
     }
-  }
-}
-
-private struct SavedRecipesPlaceholderView: View {
-  var body: some View {
-    VStack(spacing: 16) {
-      Text("Saved Recipes").font(.title).bold()
-      Text("This is a placeholder saved recipes screen.")
-        .foregroundStyle(.secondary)
-      Spacer()
-    }
-    .padding()
-    .navigationTitle("Saved Recipes")
   }
 }
 
