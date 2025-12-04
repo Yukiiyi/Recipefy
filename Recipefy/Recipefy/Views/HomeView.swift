@@ -69,6 +69,15 @@ struct HomeView: View {
               .foregroundColor(.primary)
               .padding(.horizontal)
             
+            // Saved Recipes Row
+          NavigationLink(destination: FavoriteRecipesView()) {
+            QuickActionRow(
+              icon: "heart.fill",
+              title: "Saved Recipes",
+              subtitle: "Your Favorite Recipes"
+            )
+          }
+          .buttonStyle(.plain)
           // My Ingredients Row
           NavigationLink(destination: MyIngredientsRouteView()) {
             QuickActionRow(
@@ -78,17 +87,7 @@ struct HomeView: View {
             )
           }
           .buttonStyle(.plain)
-            
-          // Saved Recipes Row
-          NavigationLink(destination: FavoriteRecipesView()) {
-            QuickActionRow(
-              icon: "heart.fill",
-              title: "Saved Recipes",
-              subtitle: "Your Favorite Recipes"
-            )
-          }
-          .buttonStyle(.plain)
-            
+          
           // Browse Recipes Row
           NavigationLink(destination: BrowseRecipesRouteView()) {
             QuickActionRow(
