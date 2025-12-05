@@ -28,7 +28,7 @@ struct PreferencesView: View {
     
     var body: some View {
         ZStack {
-            Color(red: 0.98, green: 0.98, blue: 0.97)
+            Color(.systemGroupedBackground)
                 .ignoresSafeArea()
             
             if isLoading {
@@ -63,7 +63,7 @@ struct PreferencesView: View {
                             }
                         }
                         .padding()
-                        .background(Color.white)
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(16)
                         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                         
@@ -89,7 +89,7 @@ struct PreferencesView: View {
                             }
                         }
                         .padding()
-                        .background(Color.white)
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(16)
                         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                         
@@ -136,7 +136,7 @@ struct PreferencesView: View {
                             }
                         }
                         .padding()
-                        .background(Color.white)
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(16)
                         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                         
@@ -162,7 +162,7 @@ struct PreferencesView: View {
                                 .tint(greenColor)
                         }
                         .padding()
-                        .background(Color.white)
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(16)
                         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                         

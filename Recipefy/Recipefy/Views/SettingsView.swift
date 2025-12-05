@@ -40,6 +40,7 @@ struct SettingsView: View {
                                     title: "Edit Profile",
                                     subtitle: "Name, Email , Password")
                     }
+                    .buttonStyle(.plain)
                 }
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
@@ -55,7 +56,7 @@ struct SettingsView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .background(Color.white)
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
                 .padding(.horizontal)
                 
@@ -67,6 +68,7 @@ struct SettingsView: View {
                                     title: "Saved Recipes",
                                     subtitle: "Your favorites")
                     }
+                    .buttonStyle(.plain)
                 }
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
@@ -80,6 +82,7 @@ struct SettingsView: View {
                         SettingsRow(icon: "questionmark.circle.fill", iconColor: .green,
                                     title: "Help & Support")
                     }
+                    .buttonStyle(.plain)
                     
                     Divider()
                     
@@ -87,6 +90,7 @@ struct SettingsView: View {
                         SettingsRow(icon: "shield.fill", iconColor: .green,
                                     title: "Privacy Policy")
                     }
+                    .buttonStyle(.plain)
                     
                     Divider()
                     
@@ -94,6 +98,7 @@ struct SettingsView: View {
                         SettingsRow(icon: "doc.text.fill", iconColor: .green,
                                     title: "Terms of Service")
                     }
+                    .buttonStyle(.plain)
                 }
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
