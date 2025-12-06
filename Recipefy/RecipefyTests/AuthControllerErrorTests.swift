@@ -23,7 +23,8 @@ struct AuthControllerErrorTests {
     #expect(controller.isLoading == false)
     #expect(controller.errorMessage == nil)
     #expect(controller.isAuthenticated == false)
-    #expect(controller.showLanding == true)
+    #expect(controller.showLanding == false)  // Starts hidden - auth listener decides
+    #expect(controller.isCheckingAuth == true)  // Initially checking auth state
     #expect(controller.startInLoginMode == true)
     #expect(controller.currentUser == nil)
   }
