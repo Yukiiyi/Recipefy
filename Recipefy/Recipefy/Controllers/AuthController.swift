@@ -404,7 +404,7 @@ final class AuthController: ObservableObject {
         
         switch nsError.code {
         case AuthErrorCode.emailAlreadyInUse.rawValue:
-            errorMessage = "This email is already registered. Try signing in instead."
+            errorMessage = "This email is already registered. Try logging in instead."
         case AuthErrorCode.invalidEmail.rawValue:
             errorMessage = "Please enter a valid email address."
         case AuthErrorCode.weakPassword.rawValue:
