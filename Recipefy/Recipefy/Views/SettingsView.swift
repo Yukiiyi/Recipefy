@@ -157,15 +157,30 @@ private extension SettingsView {
                     .fill(Color.green.opacity(0.15))
                     .frame(width: 80, height: 80)
                 
-                Image(systemName: "person.fill")
-                    .font(.system(size: 36))
-                    .foregroundColor(.green)
+                if let photoURL = authController.currentUser?.photoURL,
+                   let url = URL(string: photoURL) {
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 36))
+                            .foregroundColor(.green)
+                    }
+                    .frame(width: 80, height: 80)
+                    .clipShape(Circle())
+                } else {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 36))
+                        .foregroundColor(.green)
+                }
             }
             
-            Text("Name")
+            Text(authController.currentUser?.displayName ?? "User")
                 .font(.system(size: 20, weight: .semibold))
             
-            Text("xxx@andrew.cmu.edu")
+            Text(authController.currentUser?.email ?? "")
                 .font(.system(size: 14))
                 .foregroundColor(.secondary)
             

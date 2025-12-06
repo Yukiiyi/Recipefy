@@ -84,7 +84,9 @@ struct AuthView: View {
 
 
                         SignInWithAppleButton(
-                            onRequest: { $0.requestedScopes = [.fullName, .email] },
+                            onRequest: { request in
+                                controller.prepareAppleSignInRequest(request)
+                            },
                             onCompletion: { result in
                                 Task { await controller.handleAppleSignIn(result: result) }
                             }
