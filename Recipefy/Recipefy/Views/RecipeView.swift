@@ -184,6 +184,9 @@ private struct LabeledBulletList: View {
 			],
 			scanId: "preview-scan-123"
 		)
-		.environmentObject(RecipeController())
+		.environmentObject(RecipeController(
+			geminiService: GeminiService(),
+			firestoreService: FirebaseFirestoreService()
+		))
 	}
 }

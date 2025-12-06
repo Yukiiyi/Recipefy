@@ -269,5 +269,120 @@ struct DietaryPreferencesTests {
         #expect(allCases.contains(.soy))
         #expect(allCases.contains(.sesame))
     }
+    
+    // MARK: - Additional DietType Tests
+    
+    @Test("All DietType cases are defined")
+    func dietType_allCases_complete() async throws {
+        let allCases = DietType.allCases
+        
+        #expect(allCases.count == 6)
+        #expect(allCases.contains(.vegetarian))
+        #expect(allCases.contains(.vegan))
+        #expect(allCases.contains(.pescatarian))
+        #expect(allCases.contains(.glutenFree))
+        #expect(allCases.contains(.dairyFree))
+        #expect(allCases.contains(.lowCarb))
+    }
+    
+    @Test("DietType rawValues are correct")
+    func dietType_rawValues_correct() async throws {
+        #expect(DietType.vegetarian.rawValue == "Vegetarian")
+        #expect(DietType.vegan.rawValue == "Vegan")
+        #expect(DietType.pescatarian.rawValue == "Pescatarian")
+        #expect(DietType.glutenFree.rawValue == "Gluten-Free")
+        #expect(DietType.dairyFree.rawValue == "Dairy-Free")
+        #expect(DietType.lowCarb.rawValue == "Low-Carb")
+    }
+    
+    @Test("DietType all descriptions exist")
+    func dietType_allDescriptions_exist() async throws {
+        #expect(DietType.pescatarian.description == "No meat (fish OK)")
+        #expect(DietType.dairyFree.description == "No milk products")
+        #expect(DietType.lowCarb.description == "Reduced carbohydrates")
+    }
+    
+    @Test("DietType all icons exist")
+    func dietType_allIcons_exist() async throws {
+        for dietType in DietType.allCases {
+            #expect(!dietType.icon.isEmpty, "\(dietType) should have an icon")
+        }
+    }
+    
+    @Test("AllergyType all icons exist")
+    func allergyType_allIcons_exist() async throws {
+        for allergyType in AllergyType.allCases {
+            #expect(!allergyType.icon.isEmpty, "\(allergyType) should have an icon")
+        }
+    }
+    
+    // MARK: - Firestore Round-Trip Tests
+    
+    @Test("toFirestore and fromFirestore round-trip preserves data")
+    func firestore_roundTrip_preservesData() async throws {
+        let original = DietaryPreferences(
+            dietTypes: [.vegan, .glutenFree],
+            allergies: [.peanuts, .dairy, .soy],
+            dislikes: ["onions", "garlic", "peppers"],
+            maxCookingTime: 45
+        )
+        
+        let dict = original.toFirestore()
+        let restored = DietaryPreferences.fromFirestore(dict)
+        
+        #expect(restored != nil)
+        #expect(restored?.dietTypes == original.dietTypes)
+        #expect(restored?.allergies == original.allergies)
+        #expect(restored?.dislikes == original.dislikes)
+        #expect(restored?.maxCookingTime == original.maxCookingTime)
+    }
+    
+    @Test("toFirestore handles empty preferences")
+    func toFirestore_emptyPreferences() async throws {
+        let prefs = DietaryPreferences()
+        let dict = prefs.toFirestore()
+        
+        #expect((dict["dietTypes"] as? [String])?.isEmpty == true)
+        #expect((dict["allergies"] as? [String])?.isEmpty == true)
+        #expect((dict["dislikes"] as? [String])?.isEmpty == true)
+        #expect(dict["maxCookingTime"] as? Int == 60)
+    }
+    
+    @Test("fromFirestore ignores unrecognized diet types")
+    func fromFirestore_ignoresUnrecognizedDietTypes() async throws {
+        let dict: [String: Any] = [
+            "dietTypes": ["Vegetarian", "InvalidDiet", "Vegan"],
+            "allergies": [],
+            "dislikes": [],
+            "maxCookingTime": 30
+        ]
+        
+        let prefs = DietaryPreferences.fromFirestore(dict)
+        
+        // Should only include recognized diet types
+        #expect(prefs?.dietTypes.count == 2)
+        #expect(prefs?.dietTypes.contains(.vegetarian) == true)
+        #expect(prefs?.dietTypes.contains(.vegan) == true)
+    }
+    
+    // MARK: - Edge Case Tests
+    
+    @Test("toPromptString with all preferences set")
+    func toPromptString_allPreferencesSet() async throws {
+        let prefs = DietaryPreferences(
+            dietTypes: [.vegan],
+            allergies: [.gluten],
+            dislikes: ["spicy food"],
+            maxCookingTime: 20
+        )
+        
+        let prompt = prefs.toPromptString()
+        
+        #expect(prompt.contains("USER DIETARY PREFERENCES"))
+        #expect(prompt.contains("Diet Types"))
+        #expect(prompt.contains("ALLERGIES"))
+        #expect(prompt.contains("Dislikes"))
+        #expect(prompt.contains("Maximum Cooking Time: 20 minutes"))
+    }
 }
 

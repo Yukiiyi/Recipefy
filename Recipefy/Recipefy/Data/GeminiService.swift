@@ -11,7 +11,7 @@ import FirebaseAI
 import FirebaseAuth
 import FirebaseFirestore
 
-class GeminiService {
+class GeminiService: GeminiServiceProtocol {
   private let model: GenerativeModel
   private let db = Firestore.firestore()
   
