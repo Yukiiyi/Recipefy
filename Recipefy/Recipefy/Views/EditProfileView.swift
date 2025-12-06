@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct EditProfileView: View {
     @EnvironmentObject var authController: AuthController
@@ -26,13 +27,22 @@ struct EditProfileView: View {
         authController.currentUser?.email ?? ""
     }
     
+    // Check if user has linked accounts (multiple providers)
+    private var hasLinkedAccounts: Bool {
+        guard let user = Auth.auth().currentUser else { return false }
+        return user.providerData.count > 1
+    }
+    
     // Check if user signed in with email (can change password and email)
+    // BUT not if they have linked accounts (to avoid confusion)
     private var canChangePassword: Bool {
-        authController.currentUser?.authProvider == .email
+        guard authController.currentUser?.authProvider == .email else { return false }
+        return !hasLinkedAccounts
     }
     
     private var canChangeEmail: Bool {
-        authController.currentUser?.authProvider == .email
+        guard authController.currentUser?.authProvider == .email else { return false }
+        return !hasLinkedAccounts
     }
     
     var body: some View {
@@ -69,14 +79,39 @@ struct EditProfileView: View {
                     .padding(.top, 20)
                     
                     // Auth Provider Badge
-                    if let provider = authController.currentUser?.authProvider {
-                        HStack(spacing: 4) {
-                            Image(systemName: providerIcon(for: provider))
-                                .font(.system(size: 12))
-                            Text("Signed in with \(providerName(for: provider))")
-                                .font(.system(size: 12))
+                    if let user = Auth.auth().currentUser {
+                        if hasLinkedAccounts {
+                            // Show all linked providers
+                            VStack(spacing: 4) {
+                                Text("Linked Accounts:")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                HStack(spacing: 8) {
+                                    ForEach(user.providerData, id: \.providerID) { providerInfo in
+                                        HStack(spacing: 4) {
+                                            Image(systemName: iconForProviderId(providerInfo.providerID))
+                                                .font(.system(size: 12))
+                                            Text(nameForProviderId(providerInfo.providerID))
+                                                .font(.system(size: 12))
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color(.tertiarySystemGroupedBackground))
+                                        .cornerRadius(8)
+                                    }
+                                }
+                                .foregroundColor(.secondary)
+                            }
+                        } else if let provider = authController.currentUser?.authProvider {
+                            // Show single provider
+                            HStack(spacing: 4) {
+                                Image(systemName: providerIcon(for: provider))
+                                    .font(.system(size: 12))
+                                Text("Signed in with \(providerName(for: provider))")
+                                    .font(.system(size: 12))
+                            }
+                            .foregroundColor(.secondary)
                         }
-                        .foregroundColor(.secondary)
                     }
 
                     // Form Section for Profile
@@ -113,12 +148,19 @@ struct EditProfileView: View {
                             .padding(.horizontal, 4)
                     }
                     
-                    // Explanation for OAuth users
+                    // Explanation for OAuth users or linked accounts
                     if !canChangeEmail {
-                        Text("Email is managed by your \(providerName(for: authController.currentUser?.authProvider ?? .email)) account and cannot be changed here.")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal, 4)
+                        if hasLinkedAccounts {
+                            Text("You have linked multiple sign-in methods. Email and password cannot be changed to avoid conflicts between providers.")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 4)
+                        } else {
+                            Text("Email is managed by your \(providerName(for: authController.currentUser?.authProvider ?? .email)) account and cannot be changed here.")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 4)
+                        }
                     }
                     
                     // Reset Password - only for email auth
@@ -254,6 +296,26 @@ struct EditProfileView: View {
         case .email: return "Email"
         case .apple: return "Apple"
         case .google: return "Google"
+        }
+    }
+    
+    // Helper to convert Firebase provider ID to icon
+    private func iconForProviderId(_ providerID: String) -> String {
+        switch providerID {
+        case "password": return "envelope.fill"
+        case "apple.com": return "apple.logo"
+        case "google.com": return "g.circle.fill"
+        default: return "questionmark.circle"
+        }
+    }
+    
+    // Helper to convert Firebase provider ID to name
+    private func nameForProviderId(_ providerID: String) -> String {
+        switch providerID {
+        case "password": return "Email"
+        case "apple.com": return "Apple"
+        case "google.com": return "Google"
+        default: return providerID
         }
     }
 }
