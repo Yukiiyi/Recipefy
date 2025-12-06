@@ -36,9 +36,9 @@ struct AuthViewTests {
         
         // Trigger error handling by calling a method that uses it
         // We can't directly test the private method, so we test the behavior
-        sut.errorMessage = "This email is already registered. Try signing in instead."
+        sut.errorMessage = "This email is already registered. Try logging in instead."
         
-        #expect(sut.errorMessage == "This email is already registered. Try signing in instead.")
+        #expect(sut.errorMessage == "This email is already registered. Try logging in instead.")
     }
 
     @Test("handleAuthError returns correct message for weak password")
