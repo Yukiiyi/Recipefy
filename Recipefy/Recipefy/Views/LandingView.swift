@@ -8,6 +8,7 @@
 
 import SwiftUI
 import AVKit
+import AVFoundation
 
 struct LandingView: View {
     @Binding var showLanding: Bool
@@ -27,9 +28,9 @@ struct LandingView: View {
                         .foregroundColor(.primary)
                         .padding(.top, 40)
                     
-                    // Phone Mockup with Video
+                    // Phone Mockup with Video - Fixed size, centered
                     PhoneMockupView()
-                        .padding(.horizontal, 40)
+                        .fixedSize() // Ensures phone stays exact size on all devices
                     
                     // Tagline
                     VStack(spacing: 4) {
@@ -84,162 +85,117 @@ struct LandingView: View {
     }
 }
 
-// Phone Mockup with Video Placeholder
+// Phone Mockup - FIXED size that stays the same on ALL devices
 struct PhoneMockupView: View {
-    var body: some View {
-        ZStack {
-            // Phone outer bezel (black frame with notch)
-            ZStack {
-                // Main phone body
-                RoundedRectangle(cornerRadius: 40)
-                    .fill(Color.black)
-                    .frame(height: 440)
-                
-                // Screen area
-                RoundedRectangle(cornerRadius: 36)
-                    .fill(Color.white)
-                    .frame(height: 425)
-                    .padding(.horizontal, 4)
-                
-                // Notch at top
-                VStack {
-                    Capsule()
-                        .fill(Color.black)
-                        .frame(width: 120, height: 25)
-                        .offset(y: 2)
-                    Spacer()
-                }
-            }
-            .shadow(color: .black.opacity(0.2), radius: 15, x: 0, y: 8)
-            
-            // Screen Content (camera interface)
-            VideoPlaceholderView()
-                .frame(height: 410)
-                .padding(.horizontal, 8)
-                .clipShape(RoundedRectangle(cornerRadius: 34))
-                .padding(.horizontal, 4)
-        }
-    }
-}
-
-// Video Placeholder (will be replaced with actual video/camera screenshot)
-struct VideoPlaceholderView: View {
-    var body: some View {
-        ZStack {
-            // Camera interface mockup background
-            Color.black.opacity(0.9)
-            
-            // Center content - simulating camera view with food
-            VStack {
-                // Status bar area
-                HStack {
-                    Text("2:10")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.white)
-                    Spacer()
-                    HStack(spacing: 4) {
-                        Image(systemName: "cellularbars")
-                            .font(.system(size: 10))
-                        Image(systemName: "wifi")
-                            .font(.system(size: 10))
-                        Image(systemName: "battery.100")
-                            .font(.system(size: 10))
-                    }
-                    .foregroundColor(.white)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-                
-                Spacer()
-                
-                // Camera viewfinder with scanning frame
-                ZStack {
-                    // Simulated camera feed background
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.gray.opacity(0.4),
-                                    Color.gray.opacity(0.6)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                    
-                    // Scanning frame corners
-                    ZStack {
-                        ScanningCorner(rotation: 0)
-                            .position(x: 50, y: 50)
-                        ScanningCorner(rotation: 90)
-                            .position(x: 230, y: 50)
-                        ScanningCorner(rotation: 270)
-                            .position(x: 50, y: 230)
-                        ScanningCorner(rotation: 180)
-                            .position(x: 230, y: 230)
-                    }
-                    .frame(width: 280, height: 280)
-                    
-                    // Scan Food button
-                    VStack {
-                        Spacer()
-                        HStack(spacing: 12) {
-                            Image(systemName: "camera.viewfinder")
-                                .font(.system(size: 14))
-                            Text("Scan Food")
-                                .font(.system(size: 14, weight: .medium))
-                        }
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(Color.white)
-                        .cornerRadius(20)
-                        .padding(.bottom, 16)
-                    }
-                }
-                .frame(maxHeight: 300)
-                
-                Spacer()
-                
-                // Camera controls at bottom
-                HStack(spacing: 50) {
-                    Image(systemName: "bolt.slash.circle")
-                        .font(.system(size: 32))
-                        .foregroundColor(.white.opacity(0.8))
-                    
-                    // Shutter button
-                    ZStack {
-                        Circle()
-                            .stroke(Color.white, lineWidth: 3)
-                            .frame(width: 70, height: 70)
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 60, height: 60)
-                    }
-                    
-                    Image(systemName: "arrow.triangle.2.circlepath.circle")
-                        .font(.system(size: 32))
-                        .foregroundColor(.white.opacity(0.8))
-                }
-                .padding(.bottom, 20)
-            }
-        }
-    }
-}
-
-// Scanning corner overlay
-struct ScanningCorner: View {
-    let rotation: Double
+    // FIXED dimensions - will NOT change regardless of device
+    private let phoneWidth: CGFloat = 220
+    private let phoneHeight: CGFloat = 440
+    private let bezelWidth: CGFloat = 8
+    private let cornerRadius: CGFloat = 36
     
     var body: some View {
-        Path { path in
-            path.move(to: CGPoint(x: 0, y: 30))
-            path.addLine(to: CGPoint(x: 0, y: 0))
-            path.addLine(to: CGPoint(x: 30, y: 0))
+        ZStack {
+            // Phone outer frame (black bezel)
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(Color.black)
+                .frame(width: phoneWidth, height: phoneHeight)
+                .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 10)
+            
+            // Screen content - video fills the screen
+            // Note: Video already contains its own Dynamic Island, so no overlay needed
+            LandingPreviewView()
+                .frame(width: phoneWidth - bezelWidth, height: phoneHeight - bezelWidth)
+                .clipShape(RoundedRectangle(cornerRadius: cornerRadius - 4))
         }
-        .stroke(Color.white, lineWidth: 3)
-        .frame(width: 30, height: 30)
-        .rotationEffect(.degrees(rotation))
+        // Explicitly set fixed frame to prevent any scaling
+        .frame(width: phoneWidth, height: phoneHeight)
+    }
+}
+
+// Landing Preview - Tutorial Video Player (fills entire frame)
+struct LandingPreviewView: View {
+    @State private var player: AVPlayer?
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                Color.black
+                
+                if let player = player {
+                    // Use AVPlayerLayer for better control over video scaling
+                    VideoPlayerView(player: player)
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                } else {
+                    // Fallback if video not found
+                    VStack(spacing: 12) {
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.white.opacity(0.5))
+                        Text("Loading...")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.7))
+                    }
+                }
+            }
+        }
+        .onAppear {
+            setupPlayer()
+        }
+        .onDisappear {
+            player?.pause()
+        }
+    }
+    
+    private func setupPlayer() {
+        if let url = Bundle.main.url(forResource: "Recipify", withExtension: "mp4") {
+            player = AVPlayer(url: url)
+            player?.isMuted = true
+            player?.play()
+            
+            // Loop video
+            NotificationCenter.default.addObserver(
+                forName: .AVPlayerItemDidPlayToEndTime,
+                object: player?.currentItem,
+                queue: .main
+            ) { _ in
+                player?.seek(to: .zero)
+                player?.play()
+            }
+        }
+    }
+}
+
+// Custom video player view for better aspect ratio control
+struct VideoPlayerView: UIViewRepresentable {
+    let player: AVPlayer
+    
+    func makeUIView(context: Context) -> UIView {
+        let view = PlayerUIView(player: player)
+        return view
+    }
+    
+    func updateUIView(_ uiView: UIView, context: Context) {}
+}
+
+class PlayerUIView: UIView {
+    private var playerLayer: AVPlayerLayer?
+    
+    init(player: AVPlayer) {
+        super.init(frame: .zero)
+        playerLayer = AVPlayerLayer(player: player)
+        playerLayer?.videoGravity = .resizeAspectFill // Fill the frame
+        if let playerLayer = playerLayer {
+            layer.addSublayer(playerLayer)
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        playerLayer?.frame = bounds
     }
 }
 
