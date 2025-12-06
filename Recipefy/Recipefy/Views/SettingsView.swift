@@ -127,17 +127,33 @@ struct SettingsView: View {
         let db = Firestore.firestore()
         
         do {
-            // Load recipes count
-            let recipesSnapshot = try await db.collection("users").document(uid).collection("recipes").getDocuments()
+            // Load recipes count (from top-level recipes collection)
+            let recipesSnapshot = try await db.collection("recipes")
+                .whereField("createdBy", isEqualTo: uid)
+                .getDocuments()
             recipesCount = recipesSnapshot.documents.count
             
-            // Load ingredients count
-            let ingredientsSnapshot = try await db.collection("users").document(uid).collection("ingredients").getDocuments()
-            ingredientsCount = ingredientsSnapshot.documents.count
-            
-            // Load favorites count (saved recipes)
-            let favoritesSnapshot = try await db.collection("users").document(uid).collection("favorites").getDocuments()
+            // Load favorites count (recipes where favorited = true)
+            let favoritesSnapshot = try await db.collection("recipes")
+                .whereField("createdBy", isEqualTo: uid)
+                .whereField("favorited", isEqualTo: true)
+                .getDocuments()
             favoritesCount = favoritesSnapshot.documents.count
+            
+            // Load ingredients count (from all user's scans)
+            // First get all scans for this user, then count ingredients
+            let scansSnapshot = try await db.collection("scans")
+                .whereField("userId", isEqualTo: uid)
+                .getDocuments()
+            
+            var totalIngredients = 0
+            for scanDoc in scansSnapshot.documents {
+                let ingredientsSnapshot = try await scanDoc.reference
+                    .collection("ingredients")
+                    .getDocuments()
+                totalIngredients += ingredientsSnapshot.documents.count
+            }
+            ingredientsCount = totalIngredients
             
         } catch {
             print("Error loading stats: \(error)")
