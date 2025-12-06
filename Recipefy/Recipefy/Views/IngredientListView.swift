@@ -198,11 +198,13 @@ struct IngredientListView: View {
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       // Dietary preferences button (top-left)
-      ToolbarItem(placement: .navigationBarLeading) {
-        NavigationLink(destination: PreferencesView()) {
-          Image(systemName: "leaf.fill")
-            .font(.body.weight(.semibold))
-            .foregroundStyle(.green)
+      if !recipeController.isRetrieving {
+        ToolbarItem(placement: .navigationBarLeading) {
+          NavigationLink(destination: PreferencesView()) {
+            Image(systemName: "leaf.fill")
+              .font(.body.weight(.semibold))
+              .foregroundStyle(.green)
+          }
         }
       }
       
