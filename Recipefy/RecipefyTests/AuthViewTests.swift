@@ -22,7 +22,8 @@ struct AuthViewTests {
 
         #expect(sut.isLoading == false)
         #expect(sut.errorMessage == nil)
-        #expect(sut.showLanding == true)
+        #expect(sut.showLanding == false)  // Starts hidden - auth listener decides
+        #expect(sut.isCheckingAuth == true)  // Initially checking auth state
         #expect(sut.startInLoginMode == true)
         #expect(sut.currentUser == nil)
     }
