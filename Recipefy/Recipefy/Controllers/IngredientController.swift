@@ -20,30 +20,15 @@ final class IngredientController: ObservableObject {
   @Published var errorMessage: String?
   @Published var currentScanId: String?  // Track which scan these ingredients belong to
   
-  private let geminiService = GeminiService()
-  private let db = Firestore.firestore()
+  private let geminiService: GeminiServiceProtocol
+  private let firestoreService: FirestoreServiceProtocol
   
-  // MARK: - Helper Methods
-  
-  /// Creates Firestore-compatible ingredient data dictionary
-  private func createIngredientData(
-    name: String,
-    quantity: String,
-    unit: String,
-    category: IngredientCategory,
-    includeTimestamp: Bool = true
-  ) -> [String: Any] {
-    var data: [String: Any] = [
-      "name": name,
-      "quantity": quantity,
-      "unit": unit,
-      "category": category.rawValue
-    ]
-    if includeTimestamp {
-      data["createdAt"] = Timestamp(date: Date())
-    }
-    return data
+  init(geminiService: GeminiServiceProtocol, firestoreService: FirestoreServiceProtocol) {
+    self.geminiService = geminiService
+    self.firestoreService = firestoreService
   }
+  
+  // Note: createIngredientData() method removed - now handled by FirestoreService
   
   // MARK: - Public Methods
   
@@ -101,32 +86,9 @@ final class IngredientController: ObservableObject {
   }
   
   private func saveIngredients(scanId: String, ingredients: [Ingredient]) async {
-    var ingredientsWithIds = ingredients
-    
     do {
-      let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
-      let batch = db.batch()
-      
-      // Create document references and add to batch
-      for (index, ingredient) in ingredientsWithIds.enumerated() {
-        // Generate document reference with auto-ID before batch commit
-        let docRef = ingredientsCollection.document()
-        ingredientsWithIds[index].id = docRef.documentID
-        
-        let ingredientData = createIngredientData(
-          name: ingredient.name,
-          quantity: ingredient.quantity,
-          unit: ingredient.unit,
-          category: ingredient.category
-        )
-        
-        batch.setData(ingredientData, forDocument: docRef)
-      }
-      
-      // Single network call to save all ingredients
-      try await batch.commit()
-      
-      currentIngredients = ingredientsWithIds
+      let savedIngredients = try await firestoreService.saveIngredients(scanId: scanId, ingredients: ingredients)
+      currentIngredients = savedIngredients
       saveSuccess = true
     } catch {
       statusText = "Save error: \(error.localizedDescription)"
@@ -140,30 +102,9 @@ final class IngredientController: ObservableObject {
     statusText = "Loading ingredients..."
     
     do {
-      // Fetch all ingredients for this scan
-      let snapshot = try await db.collection("scans")
-        .document(scanId)
-        .collection("ingredients")
-        .getDocuments()
-      
-      // Map Firestore documents to Ingredient objects
-      let ingredients = snapshot.documents.compactMap { doc -> Ingredient? in
-        let data = doc.data()
-        
-        guard let name = data["name"] as? String,
-              let quantity = data["quantity"] as? String,
-              let unit = data["unit"] as? String,
-              let categoryString = data["category"] as? String
-        else {
-          return nil
-        }
-        
-        let category = IngredientCategory.from(string: categoryString)
-        return Ingredient(id: doc.documentID, name: name, quantity: quantity, unit: unit, category: category)
-      }
-      
+      let ingredients = try await firestoreService.loadIngredients(scanId: scanId)
       currentIngredients = ingredients
-      currentScanId = scanId  // Track which scan these belong to
+      currentScanId = scanId
       statusText = ingredients.isEmpty ? "No ingredients yet" : "Loaded \(ingredients.count) ingredients"
       isAnalyzing = false
       print("Loaded \(ingredients.count) ingredients from scan \(scanId)")
@@ -182,14 +123,7 @@ final class IngredientController: ObservableObject {
     }
     
     do {
-      // Delete from Firestore
-      try await db.collection("scans")
-        .document(scanId)
-        .collection("ingredients")
-        .document(ingredientId)
-        .delete()
-      
-      // Remove from local state
+      try await firestoreService.deleteIngredient(scanId: scanId, ingredientId: ingredientId)
       currentIngredients?.removeAll { $0.id == ingredientId }
     } catch {
       errorMessage = "Failed to delete ingredient: \(error.localizedDescription)"
@@ -198,13 +132,8 @@ final class IngredientController: ObservableObject {
   
   func addIngredient(scanId: String, name: String, quantity: String, unit: String, category: IngredientCategory) async {
     do {
-      let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
+      let newIngredient = try await firestoreService.addIngredient(scanId: scanId, name: name, quantity: quantity, unit: unit, category: category)
       
-      let ingredientData = createIngredientData(name: name, quantity: quantity, unit: unit, category: category)
-      let docRef = try await ingredientsCollection.addDocument(data: ingredientData)
-      
-      // Create new ingredient with ID and add to top of list
-      let newIngredient = Ingredient(id: docRef.documentID, name: name, quantity: quantity, unit: unit, category: category)
       if currentIngredients != nil {
         currentIngredients?.insert(newIngredient, at: 0)  // Add to top
       } else {
@@ -223,11 +152,7 @@ final class IngredientController: ObservableObject {
     }
     
     do {
-      let ingredientsCollection = db.collection("scans").document(scanId).collection("ingredients")
-      
-      // Don't update createdAt - it should remain the original timestamp
-      let ingredientData = createIngredientData(name: name, quantity: quantity, unit: unit, category: category, includeTimestamp: false)
-      try await ingredientsCollection.document(ingredientId).setData(ingredientData, merge: true)
+      try await firestoreService.updateIngredient(scanId: scanId, ingredientId: ingredientId, name: name, quantity: quantity, unit: unit, category: category)
       
       // Update in local state
       if let index = currentIngredients?.firstIndex(where: { $0.id == ingredientId }) {

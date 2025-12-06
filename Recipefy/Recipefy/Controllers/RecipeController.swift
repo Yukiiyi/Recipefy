@@ -22,9 +22,14 @@ final class RecipeController: ObservableObject {
 	@Published var lastGeneratedScanId: String?
 	@Published var isLoadingMore = false
     
-  private let geminiService = GeminiService()
-	private let db = Firestore.firestore()
+  private let geminiService: GeminiServiceProtocol
+	private let firestoreService: FirestoreServiceProtocol
 	private var lastFormattedIngredients: [String] = []
+	
+	init(geminiService: GeminiServiceProtocol, firestoreService: FirestoreServiceProtocol) {
+		self.geminiService = geminiService
+		self.firestoreService = firestoreService
+	}
 	
 	func getRecipe(ingredients: [Ingredient], sourceScanId: String? = nil) async {
 		let ingredientsData = ingredients.map { $0.toDictionary() }
@@ -82,12 +87,7 @@ final class RecipeController: ObservableObject {
 		isSaving = true
 		
 		do {
-			for recipe in recipesToSave {
-				let recipeData = makeFirestoreData(for: recipe, userId: userId, sourceScanId: sourceScanId)
-				let _ = try await db.collection("recipes")
-					.addDocument(data: recipeData)
-			}
-			
+			try await firestoreService.saveRecipes(userId: userId, recipes: recipesToSave, sourceScanId: sourceScanId)
 			saveSuccess = true
 			print("✅ Saved \(recipesToSave.count) recipes to Firestore")
 		} catch {
@@ -111,78 +111,13 @@ final class RecipeController: ObservableObject {
 		statusText = "Loading your recipes..."
 		
 		do {
-			// Step 1: Get the most recent recipe to find the latest scan
-			let recentSnapshot = try await db.collection("recipes")
-				.whereField("createdBy", isEqualTo: userId)
-				.order(by: "createdAt", descending: true)
-				.limit(to: 1)
-				.getDocuments()
-			
-			// If no recipes exist, return empty
-			guard let mostRecentDoc = recentSnapshot.documents.first,
-						let mostRecentScanId = mostRecentDoc.data()["sourceScanId"] as? String,
-						!mostRecentScanId.isEmpty else {
-				currentRecipes = []
-				statusText = "No recipes yet"
-				isRetrieving = false
-				return
-			}
-			
-			// Step 2: Get all recipes from that scan
-			let snapshot = try await db.collection("recipes")
-				.whereField("createdBy", isEqualTo: userId)
-				.whereField("sourceScanId", isEqualTo: mostRecentScanId)
-				.order(by: "createdAt", descending: false)  // Keep generation order
-				.getDocuments()
-			
-			// Map Firestore documents to Recipe objects
-			let recipes = snapshot.documents.compactMap { doc -> Recipe? in
-				let data = doc.data()
-				
-				// Extract all fields from Firestore document
-				guard let title = data["title"] as? String,
-							let description = data["description"] as? String,
-							let ingredients = data["ingredients"] as? [String],
-							let steps = data["steps"] as? [String],
-							let calories = data["calories"] as? Int,
-							let servings = data["servings"] as? Int,
-							let cookMin = data["cookMin"] as? Int,
-							let protein = data["protein"] as? Int,
-							let carbs = data["carbs"] as? Int,
-							let fat = data["fat"] as? Int,
-							let fiber = data["fiber"] as? Int
-				else {
-					return nil
-				}
-				
-				let sugar = data["sugar"] as? Int ?? 0
-				let favorited = data["favorited"] as? Bool ?? false
-				
-				// Create Recipe object with document ID as recipeID
-				return Recipe(
-					recipeID: doc.documentID,
-					title: title,
-					description: description,
-					ingredients: ingredients,
-					steps: steps,
-					calories: calories,
-					servings: servings,
-					cookMin: cookMin,
-					protein: protein,
-					carbs: carbs,
-					fat: fat,
-					fiber: fiber,
-					sugar: sugar,
-					favorited: favorited
-				)
-			}
-			
-			currentRecipes = recipes
-			lastGeneratedScanId = mostRecentScanId
-			statusText = recipes.isEmpty ? "No recipes yet" : "Loaded \(recipes.count) recipes"
+			let result = try await firestoreService.loadRecipes(userId: userId)
+			currentRecipes = result.recipes
+			lastGeneratedScanId = result.scanId
+			statusText = result.recipes.isEmpty ? "No recipes yet" : "Loaded \(result.recipes.count) recipes"
 			isRetrieving = false
 		} catch {
-			currentRecipes = []  // Empty array instead of nil
+			currentRecipes = []
 			statusText = "No recipes yet"
 			isRetrieving = false
 			print("❌ Load recipes error: \(error.localizedDescription)")
@@ -209,9 +144,7 @@ final class RecipeController: ObservableObject {
 		// Persist to Firestore
 		Task {
 			do {
-				try await db.collection("recipes")
-					.document(recipeID)
-					.updateData(["favorited": newValue])
+				try await firestoreService.updateRecipeFavorite(recipeId: recipeID, isFavorited: newValue)
 			} catch {
 					print("❌ Failed to update favorite: \(error.localizedDescription)")
 			}
@@ -228,51 +161,7 @@ final class RecipeController: ObservableObject {
 		statusText = "Loading favorites..."
 		
 		do {
-			let snapshot = try await db.collection("recipes")
-					.whereField("createdBy", isEqualTo: userId)
-					.whereField("favorited", isEqualTo: true)
-					.order(by: "createdAt", descending: true)
-					.getDocuments()
-			
-			let recipes = snapshot.documents.compactMap { doc -> Recipe? in
-				let data = doc.data()
-				
-				guard let title = data["title"] as? String,
-					let description = data["description"] as? String,
-					let ingredients = data["ingredients"] as? [String],
-					let steps = data["steps"] as? [String],
-					let calories = data["calories"] as? Int,
-					let servings = data["servings"] as? Int,
-					let cookMin = data["cookMin"] as? Int,
-					let protein = data["protein"] as? Int,
-					let carbs = data["carbs"] as? Int,
-					let fat = data["fat"] as? Int,
-					let fiber = data["fiber"] as? Int
-				else {
-					return nil
-				}
-					
-				let sugar = data["sugar"] as? Int ?? 0
-				let favorited = data["favorited"] as? Bool ?? false
-					
-				return Recipe(
-					recipeID: doc.documentID,
-					title: title,
-					description: description,
-					ingredients: ingredients,
-					steps: steps,
-					calories: calories,
-					servings: servings,
-					cookMin: cookMin,
-					protein: protein,
-					carbs: carbs,
-					fat: fat,
-					fiber: fiber,
-					sugar: sugar,
-					favorited: favorited
-				)
-			}
-			
+			let recipes = try await firestoreService.loadFavoriteRecipes(userId: userId)
 			favoriteRecipes = recipes
 			statusText = recipes.isEmpty ? "No favorites yet" : "Loaded \(recipes.count) favorites"
 		} catch {
@@ -310,30 +199,5 @@ final class RecipeController: ObservableObject {
 			
 			isLoadingMore = false
 		}
-	
-	// MARK: - Private Helpers
-	
-	/// Converts a Recipe to Firestore-compatible dictionary
-	private func makeFirestoreData(for recipe: Recipe, userId: String, sourceScanId: String?) -> [String: Any] {
-		return [
-			"title": recipe.title,
-			"description": recipe.description,
-			"ingredients": recipe.ingredients,
-			"steps": recipe.steps,
-			"calories": recipe.calories,
-			"servings": recipe.servings,
-			"cookMin": recipe.cookMin,
-			"protein": recipe.protein,
-			"carbs": recipe.carbs,
-			"fat": recipe.fat,
-			"fiber": recipe.fiber,
-			"sugar": recipe.sugar,
-			"createdBy": userId,
-			"sourceScanId": sourceScanId ?? "",
-			"favorited": recipe.favorited,
-			"createdAt": Timestamp(date: Date())
-		]
-	}
 }
-
 
