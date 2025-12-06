@@ -13,8 +13,8 @@ struct AuthView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var isLoginMode = true
     @State private var username = ""
-    @State private var email = "sampleUser@andrew.cmu.edu"
-    @State private var password = "123456"
+    @State private var email = ""
+    @State private var password = ""
     @State private var confirmPassword = ""
     @State private var hasSetInitialMode = false
 
