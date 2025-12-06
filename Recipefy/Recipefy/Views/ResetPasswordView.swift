@@ -22,30 +22,7 @@ struct ResetPasswordView: View {
             Color(.systemGroupedBackground).ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 32) {
-
-                    // MARK: - Back Button
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 18, weight: .semibold))
-                                
-                                Text("Back")
-                                    .font(.system(size: 17, weight: .semibold))
-                            }
-                            .foregroundColor(.green)
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-
-                    // MARK: - Title
-                    Text("Reset Password")
-                        .font(.system(size: 32, weight: .bold))
-                        .padding(.top, 20)
-
+                VStack(spacing: 24) {
                     // MARK: - Current Password
                     LabeledField(label: "Current Password", systemImage: "lock.fill") {
                         SecureField("Enter your current password", text: $currentPassword)
@@ -65,7 +42,7 @@ struct ResetPasswordView: View {
                     Button {
                         validatePasswordReset()
                     } label: {
-                        Text("Confirm")
+                        Text("Update Password")
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -74,21 +51,15 @@ struct ResetPasswordView: View {
                             .cornerRadius(12)
                             .shadow(color: .gray.opacity(0.4), radius: 4, x: 0, y: 4)
                     }
-                    .padding(.horizontal)
 
-                    // MARK: - Cancel Button
-                    Button(action: { dismiss() }) {
-                        Text("Cancel")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.gray)
-                    }
-
-                    Spacer()
+                    Spacer().frame(height: 20)
 
                     // MARK: - Forgot Password Section
                     VStack(alignment: .leading, spacing: 12) {
-
-                        LabeledField(label: "Forgot Your Password?", systemImage: "envelope.fill") {
+                        Text("Forgot Your Password?")
+                            .font(.system(size: 18, weight: .bold))
+                        
+                        LabeledField(label: "Recovery Email", systemImage: "envelope.fill") {
                             TextField("Enter your account email", text: $recoveryEmail)
                                 .keyboardType(.emailAddress)
                                 .autocapitalization(.none)
@@ -97,7 +68,7 @@ struct ResetPasswordView: View {
                         Button {
                             sendRecoveryEmail()
                         } label: {
-                            Text("Send New Password Email")
+                            Text("Send Password Reset Email")
                                 .font(.system(size: 17, weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -110,8 +81,11 @@ struct ResetPasswordView: View {
                     .padding(.bottom, 30)
                 }
                 .padding(.horizontal)
+                .padding(.top, 20)
             }
         }
+        .navigationTitle("Reset Password")
+        .navigationBarTitleDisplayMode(.large)
         .alert(isPresented: $showAlert) {
             Alert(
                 title: Text("Notice"),
@@ -119,7 +93,6 @@ struct ResetPasswordView: View {
                 dismissButton: .default(Text("OK"))
             )
         }
-        .navigationBarHidden(true)
     }
 
     // MARK: - Validation Logic
@@ -160,7 +133,7 @@ private struct LabeledField<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
-                .font(.system(size: 17, weight: .medium))
+                .font(.system(size: 14, weight: .medium))
             
             HStack(spacing: 12) {
                 Image(systemName: systemImage)
@@ -180,5 +153,7 @@ private struct LabeledField<Content: View>: View {
 }
 
 #Preview {
-    ResetPasswordView()
+    NavigationStack {
+        ResetPasswordView()
+    }
 }
