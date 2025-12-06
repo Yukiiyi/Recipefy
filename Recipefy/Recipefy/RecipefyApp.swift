@@ -19,8 +19,14 @@ struct RecipefyApp: App {
     storage: FirebaseStorageService(),
     scans: FirebaseScanRepository()
   )
-  @StateObject private var ingredientController = IngredientController()
-  @StateObject private var recipeController = RecipeController()
+  @StateObject private var ingredientController = IngredientController(
+    geminiService: GeminiService(),
+    firestoreService: FirebaseFirestoreService()
+  )
+  @StateObject private var recipeController = RecipeController(
+    geminiService: GeminiService(),
+    firestoreService: FirebaseFirestoreService()
+  )
 
   var body: some Scene {
     WindowGroup {
