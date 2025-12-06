@@ -279,12 +279,6 @@ struct ScanView: View {
           title: "Multiple Images",
           description: "You can take multiple images (e.g., fridge, pantry) to capture all your ingredients. Maximum 5 photos per scan."
         )
-        
-        instructionItem(
-          icon: "arrow.triangle.2.circlepath",
-          title: "Auto-Deduplication",
-          description: "Duplicate ingredients are handled automatically, so don't worry if the same item appears in multiple photos."
-        )
       }
       .padding(24)
       .navigationTitle("How to Scan")
@@ -297,7 +291,7 @@ struct ScanView: View {
         }
       }
     }
-    .presentationDetents([.medium])
+    .presentationDetents([.height(300)])
   }
   
   private func instructionItem(icon: String, title: String, description: String) -> some View {

@@ -31,7 +31,7 @@ struct ReviewScansView: View {
           .font(.title3)
           .foregroundStyle(.green)
         
-        Text("Review your Ingredient images. Our AI will identify all clear ingredients and handle duplicate ingredients automatically")
+        Text("Review your Ingredient images. Our AI will identify all clear ingredients.")
           .font(.subheadline)
           .foregroundStyle(.primary)
           .fixedSize(horizontal: false, vertical: true)

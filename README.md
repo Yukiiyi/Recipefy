@@ -312,6 +312,12 @@ func loadMoreRecipesIfNeeded() async {
 
 **Rationale:** AI recipe generation takes time. Generating 3 recipes initially provides fast results, and users who want more variety can request additional batches on demand rather than waiting upfront for a large set.
 
+#### 12. **Manual Deduplication Over Automatic - Intentional Omission From V2**
+
+Automatic ingredient deduplication was initially planned but intentionally omitted after testing.
+
+**Rationale:** Testing revealed that automatic deduplication was overly aggressive — unique items with that happened to be in the same scan upload were incorrectly merged. Users found it easier to quickly swipe-to-delete duplicates than to re-add ingredients that were incorrectly removed. This trade-off prioritizes data accuracy over convenience.
+
 ---
 
 ## 📂 Project Structure
