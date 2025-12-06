@@ -130,7 +130,13 @@ struct NavigationBarView: View {
         .environmentObject(NavigationState())
         .environmentObject(AuthController())
         .environmentObject(ScanController(storage: FirebaseStorageService(), scans: FirebaseScanRepository()))
-        .environmentObject(IngredientController())
-        .environmentObject(RecipeController())
+        .environmentObject(IngredientController(
+            geminiService: GeminiService(),
+            firestoreService: FirebaseFirestoreService()
+        ))
+        .environmentObject(RecipeController(
+            geminiService: GeminiService(),
+            firestoreService: FirebaseFirestoreService()
+        ))
 }
 

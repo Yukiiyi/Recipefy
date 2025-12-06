@@ -256,14 +256,20 @@ struct IngredientFormView: View {
 
 #Preview("Add Ingredient") {
   IngredientFormView(
-    controller: IngredientController(),
+    controller: IngredientController(
+      geminiService: GeminiService(),
+      firestoreService: FirebaseFirestoreService()
+    ),
     scanId: "preview-scan-id"
   )
 }
 
 #Preview("Edit Ingredient") {
   IngredientFormView(
-    controller: IngredientController(),
+    controller: IngredientController(
+      geminiService: GeminiService(),
+      firestoreService: FirebaseFirestoreService()
+    ),
     scanId: "preview-scan-id",
     ingredient: Ingredient(
       id: "preview-ingredient-id",
