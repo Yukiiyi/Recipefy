@@ -127,33 +127,46 @@ struct SettingsView: View {
         let db = Firestore.firestore()
         
         do {
-            // Load recipes count (from top-level recipes collection)
-            let recipesSnapshot = try await db.collection("recipes")
+            // Run recipes and scans queries in parallel
+            async let recipesTask = db.collection("recipes")
                 .whereField("createdBy", isEqualTo: uid)
                 .getDocuments()
-            recipesCount = recipesSnapshot.documents.count
             
-            // Load favorites count (recipes where favorited = true)
-            let favoritesSnapshot = try await db.collection("recipes")
-                .whereField("createdBy", isEqualTo: uid)
-                .whereField("favorited", isEqualTo: true)
-                .getDocuments()
-            favoritesCount = favoritesSnapshot.documents.count
-            
-            // Load ingredients count (from all user's scans)
-            // First get all scans for this user, then count ingredients
-            let scansSnapshot = try await db.collection("scans")
+            async let scansTask = db.collection("scans")
                 .whereField("userId", isEqualTo: uid)
                 .getDocuments()
             
-            var totalIngredients = 0
-            for scanDoc in scansSnapshot.documents {
-                let ingredientsSnapshot = try await scanDoc.reference
-                    .collection("ingredients")
-                    .getDocuments()
-                totalIngredients += ingredientsSnapshot.documents.count
+            // Await both in parallel
+            let (recipesSnapshot, scansSnapshot) = try await (recipesTask, scansTask)
+            
+            // Process recipes (no additional queries needed)
+            recipesCount = recipesSnapshot.documents.count
+            favoritesCount = recipesSnapshot.documents.filter { doc in
+                (doc.data()["favorited"] as? Bool) == true
+            }.count
+            
+            // Process ingredients in parallel
+            let ingredientCounts = await withTaskGroup(of: Int.self) { group in
+                for scanDoc in scansSnapshot.documents {
+                    group.addTask {
+                        do {
+                            let ingredientsSnapshot = try await scanDoc.reference
+                                .collection("ingredients")
+                                .getDocuments()
+                            return ingredientsSnapshot.documents.count
+                        } catch {
+                            return 0
+                        }
+                    }
+                }
+                
+                var total = 0
+                for await count in group {
+                    total += count
+                }
+                return total
             }
-            ingredientsCount = totalIngredients
+            ingredientsCount = ingredientCounts
             
         } catch {
             print("Error loading stats: \(error)")
