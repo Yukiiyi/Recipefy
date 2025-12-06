@@ -16,9 +16,11 @@ Recipefy is an iOS app that uses AI-powered image recognition to identify ingred
 ### Core Functionality
 - **📸 Multi-Image Scanning** — Capture up to 5 photos per session (fridge, pantry, countertop)
 - **🤖 AI Ingredient Recognition** — Powered by Google's Gemini 2.5 Flash for accurate identification
-- **🍽️ Smart Recipe Generation** — Get unique recipes based on your available ingredients
+- **✏️ Ingredient Management** — Add, edit, or delete ingredients manually after scanning
+- **🍽️ Smart Recipe Generation** — Get 3 unique recipes based on your available ingredients initially; request more batches as needed
+- **📖 Recipe Detail View** — Tabbed interface showing Ingredients, Steps, and Nutrition breakdown
 - **❤️ Favorites** — Save and organize your favorite recipes
-- **👤 User Profiles** — Track your recipes, ingredients, and cooking history
+- **👤 User Profiles** — Edit display name, email, and password; track usage stats
 
 ### Dietary Preferences
 - **Diet Types** — Vegetarian, Vegan, Pescatarian, Gluten-Free, Dairy-Free, Low-Carb
@@ -278,6 +280,23 @@ func saveIngredients(scanId: String, ingredients: [Ingredient]) async throws -> 
 ```
 
 **Rationale:** A single batch commit is faster and ensures all-or-nothing saves, preventing partial data states.
+
+#### 11. **Batch Recipe Generation**
+
+Recipes are generated in batches of 3 to minimize wait time:
+
+```swift
+func loadMoreRecipesIfNeeded() async {
+  guard !isRetrieving, !isLoadingMore, !lastFormattedIngredients.isEmpty else { return }
+  
+  isLoadingMore = true
+  let moreRecipes = try await geminiService.getRecipe(ingredients: lastFormattedIngredients)
+  currentRecipes?.append(contentsOf: moreRecipes)
+  isLoadingMore = false
+}
+```
+
+**Rationale:** AI recipe generation takes time. Generating 3 recipes initially provides fast results, and users who want more variety can request additional batches on demand rather than waiting upfront for a large set.
 
 ---
 
