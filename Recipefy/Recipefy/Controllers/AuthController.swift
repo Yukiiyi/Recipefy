@@ -421,6 +421,12 @@ final class AuthController: ObservableObject {
             errorMessage = "This account has been disabled."
         case AuthErrorCode.requiresRecentLogin.rawValue:
             errorMessage = "Please sign in again to complete this action."
+        case AuthErrorCode.accountExistsWithDifferentCredential.rawValue:
+            errorMessage = "An account already exists with this email using a different sign-in method. Try signing in with email/password or the original provider."
+        case AuthErrorCode.credentialAlreadyInUse.rawValue:
+            errorMessage = "This credential is already associated with a different account."
+        case AuthErrorCode.invalidCredential.rawValue:
+            errorMessage = "Invalid credentials. Please try again."
         default:
             errorMessage = error.localizedDescription
         }
