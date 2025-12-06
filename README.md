@@ -570,27 +570,7 @@ recipes/
 ---
 
 ## 👥 Team
-
-| Name | Role |
-|------|------|
-| Streak Honey | Lead Developer, Architecture |
-| Abdallah Abdaljalil | Authentication, UI/UX |
-| Yuqi Zou | AI Integration, Ingredient Analysis |
-| Jonas Oh | Recipe Generation, Navigation |
-
----
-
-## 📄 License
-
-This project was developed for 67-443 Mobile App Development at Carnegie Mellon University, Fall 2025.
-
----
-
-## 🔮 Future Enhancements
-
-- [ ] Offline mode with local recipe caching
-- [ ] Recipe sharing via deep links
-- [ ] Shopping list generation from recipes
-- [ ] Nutritional goal tracking
-- [ ] Community recipe contributions
-- [ ] Voice-guided cooking mode
+- Streak Honey
+- Jonass Oh
+- Abdallah Abdaljalil
+- Yuqi Zou
