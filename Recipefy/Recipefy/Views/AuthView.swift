@@ -120,7 +120,7 @@ struct AuthView: View {
                         }
 
                         LabeledField(label: "Email", systemImage: "envelope.fill") {
-                            TextField("your.email@example.com", text: $email)
+                            TextField("Enter your email", text: $email)
                                 .textContentType(.emailAddress)
                                 .keyboardType(.emailAddress)
                                 .autocapitalization(.none)
