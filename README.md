@@ -16,7 +16,7 @@ Recipefy is an iOS app that uses AI-powered image recognition to identify ingred
 ### Core Functionality
 - **📸 Multi-Image Scanning** — Capture up to 5 photos per session (fridge, pantry, countertop)
 - **🤖 AI Ingredient Recognition** — Powered by Google's Gemini 2.5 Flash for accurate identification
-- **✏️ Ingredient Management** — Add, edit, or delete ingredients manually after scanning
+- **✏️ Ingredient Management** — Add, edit, or delete ingredients manually after scanning using intuitive IOS UI
 - **🍽️ Smart Recipe Generation** — Get 3 unique recipes based on your available ingredients initially; request more batches as needed
 - **📖 Recipe Detail View** — Tabbed interface showing Ingredients, Steps, and Nutrition breakdown
 - **❤️ Favorites** — Save and organize your favorite recipes
@@ -591,6 +591,7 @@ recipes/
 ## 🎨 UI/UX Design
 
 - **Color Theme** — Green accent (`#5CB85C`) representing fresh, healthy cooking
+- **Dark & Light Mode** — Full support for both system appearances
 - **Typography** — SF Pro with semantic sizing for hierarchy
 - **Navigation** — 5-tab structure (Home, Ingredients, Scan, Recipes, Settings)
 - **Empty States** — Informative messages with relevant icons
