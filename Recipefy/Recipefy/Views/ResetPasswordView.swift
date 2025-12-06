@@ -190,7 +190,7 @@ struct ResetPasswordView: View {
         
         if success {
             alertTitle = "Email Sent"
-            alertMessage = "A password reset link has been sent to \(recoveryEmail). Check your inbox."
+            alertMessage = "A password reset link has been sent to \(recoveryEmail).\n\nCheck your inbox and spam/junk folder."
             shouldDismissOnOK = false
         } else {
             alertTitle = "Error"

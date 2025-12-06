@@ -17,6 +17,10 @@ struct AuthView: View {
     @State private var password = ""
     @State private var confirmPassword = ""
     @State private var hasSetInitialMode = false
+    @State private var showForgotPassword = false
+    @State private var resetEmail = ""
+    @State private var showResetAlert = false
+    @State private var resetAlertMessage = ""
 
     var body: some View {
         ZStack {
@@ -130,6 +134,22 @@ struct AuthView: View {
                             SecureField("Enter your password", text: $password)
                                 .textContentType(isLoginMode ? .password : .newPassword)
                         }
+                        
+                        // Forgot Password link (only in login mode)
+                        if isLoginMode {
+                            HStack {
+                                Spacer()
+                                Button {
+                                    resetEmail = email  // Pre-fill with entered email
+                                    showForgotPassword = true
+                                } label: {
+                                    Text("Forgot Password?")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
 
                         if !isLoginMode {
                             LabeledField(label: "Confirm Password", systemImage: "lock.fill") {
@@ -180,6 +200,30 @@ struct AuthView: View {
                 isLoginMode = controller.startInLoginMode
                 hasSetInitialMode = true
             }
+        }
+        .alert("Reset Password", isPresented: $showForgotPassword) {
+            TextField("Enter your email", text: $resetEmail)
+                .textContentType(.emailAddress)
+                .autocapitalization(.none)
+            Button("Cancel", role: .cancel) { }
+            Button("Send Reset Link") {
+                Task {
+                    let success = await controller.sendPasswordReset(to: resetEmail)
+                    if success {
+                        resetAlertMessage = "A password reset link has been sent to \(resetEmail).\n\nCheck your inbox and spam/junk folder."
+                    } else {
+                        resetAlertMessage = controller.errorMessage ?? "Failed to send reset email."
+                    }
+                    showResetAlert = true
+                }
+            }
+        } message: {
+            Text("Enter the email address associated with your account.")
+        }
+        .alert("Password Reset", isPresented: $showResetAlert) {
+            Button("OK") { }
+        } message: {
+            Text(resetAlertMessage)
         }
     }
 }
