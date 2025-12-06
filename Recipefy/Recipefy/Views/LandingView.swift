@@ -13,11 +13,12 @@ import AVFoundation
 struct LandingView: View {
     @Binding var showLanding: Bool
     @EnvironmentObject var authController: AuthController
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         ZStack {
-            // Background
-            Color(red: 0.98, green: 0.98, blue: 0.97)
+            // Background - adapts to dark/light mode
+            Color(.systemBackground)
                 .ignoresSafeArea()
             
             ScrollView {
@@ -26,7 +27,7 @@ struct LandingView: View {
                     Text("Recipefy")
                         .font(.system(size: 36, weight: .bold))
                         .foregroundColor(.primary)
-                        .padding(.top, 40)
+                        .padding(.top, 20)
                     
                     // Phone Mockup with Video - Fixed size, centered
                     PhoneMockupView()
@@ -51,10 +52,10 @@ struct LandingView: View {
                     } label: {
                         Text("Get Started")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(colorScheme == .dark ? .black : .white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(Color.black)
+                            .background(Color.primary)
                             .cornerRadius(12)
                     }
                     .buttonStyle(.plain)
