@@ -68,7 +68,7 @@ struct AuthView: View {
                                 .resizable()
                                 .frame(width: 18, height: 18)
                             
-                            Text(isLoginMode ? "Sign in with Google" : "Sign up with Google")
+                            Text("Continue with Google")
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(.primary)
                         }
@@ -81,7 +81,7 @@ struct AuthView: View {
                         )
                         .cornerRadius(8)
                         .contentShape(Rectangle())
-                        .accessibilityLabel(isLoginMode ? "Sign in with Google" : "Sign up with Google")
+                        .accessibilityLabel("Continue with Google")
                     }
                     .buttonStyle(.plain)
                     .disabled(controller.isLoading)
