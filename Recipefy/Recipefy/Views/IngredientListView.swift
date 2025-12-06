@@ -81,7 +81,7 @@ struct IngredientListView: View {
         VStack(spacing: 16) {
           Spacer()
           
-          Image(systemName: "leaf.circle")
+          Image(systemName: "basket")
             .font(.system(size: 48))
             .foregroundStyle(.green)
           
@@ -197,6 +197,16 @@ struct IngredientListView: View {
     .navigationTitle("Ingredients")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
+      // Dietary preferences button (top-left)
+      ToolbarItem(placement: .navigationBarLeading) {
+        NavigationLink(destination: PreferencesView()) {
+          Image(systemName: "leaf.fill")
+            .font(.body.weight(.semibold))
+            .foregroundStyle(.green)
+        }
+      }
+      
+      // Add ingredient button (top-right)
       if !recipeController.isRetrieving {
         ToolbarItem(placement: .navigationBarTrailing) {
           Button(action: {
@@ -288,5 +298,36 @@ struct IngredientListView: View {
       )
       .padding(.horizontal, 24)
     }
+  }
+}
+
+#Preview {
+  let navigationState = NavigationState()
+  let ingredientController = IngredientController(
+    geminiService: GeminiService(),
+    firestoreService: FirebaseFirestoreService()
+  )
+  let recipeController = RecipeController(
+    geminiService: GeminiService(),
+    firestoreService: FirebaseFirestoreService()
+  )
+  
+  // Set mock ingredients
+  ingredientController.currentIngredients = [
+    Ingredient(id: "1", name: "Chicken Breast", quantity: "2", unit: "lb", category: .proteins),
+    Ingredient(id: "2", name: "Broccoli", quantity: "1", unit: "bunch", category: .vegetables),
+    Ingredient(id: "3", name: "Rice", quantity: "2", unit: "cup", category: .grains),
+    Ingredient(id: "4", name: "Olive Oil", quantity: "2", unit: "tbsp", category: .oil)
+  ]
+  ingredientController.currentScanId = "preview-scan-123"
+  
+  return NavigationStack {
+    IngredientListView(
+      scanId: "preview-scan-123",
+      imageDataArray: []
+    )
+    .environmentObject(navigationState)
+    .environmentObject(ingredientController)
+    .environmentObject(recipeController)
   }
 }
