@@ -16,10 +16,12 @@ Recipefy is an iOS app that uses AI-powered image recognition to identify ingred
 <p align="center">
   <img src="screenshots/landing.png" width="180" alt="Landing"/>
   <img src="screenshots/home.png" width="180" alt="Home"/>
-  <img src="screenshots/scan.png" width="180" alt="Scan"/>
   <img src="screenshots/ingredients.png" width="180" alt="Ingredients"/>
+</p>
+
+<p align="center">
   <img src="screenshots/recipes.png" width="180" alt="Recipes"/>
-  <img src="screenshots/recipe-detail.png" width="180" alt="Recipe Detail"/>
+  <img src="screenshots/recipe_detail.png" width="180" alt="Recipe Detail"/>
   <img src="screenshots/settings.png" width="180" alt="Settings"/>
 </p>
 
