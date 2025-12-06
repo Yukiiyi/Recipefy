@@ -41,66 +41,42 @@ struct EditProfileView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
-                    // MARK: - Back Button
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 18, weight: .semibold))
-                                
-                                Text("Back")
-                                    .font(.system(size: 17, weight: .semibold))
-                            }
-                            .foregroundColor(.green)
-                        }
+                    // Profile Photo
+                    ZStack {
+                        Circle()
+                            .fill(Color(red: 0.36, green: 0.72, blue: 0.36).opacity(0.2))
+                            .frame(width: 80, height: 80)
                         
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-
-                    VStack(spacing: 12) {
-                        Text("Edit Profile")
-                            .font(.system(size: 32, weight: .bold))
-                            .padding(.top, 40)
-                            .padding(.bottom, 10)
-                        
-                        // Profile Photo
-                        ZStack {
-                            Circle()
-                                .fill(Color(red: 0.36, green: 0.72, blue: 0.36).opacity(0.2))
-                                .frame(width: 80, height: 80)
-                            
-                            if let photoURL = authController.currentUser?.photoURL,
-                               let url = URL(string: photoURL) {
-                                AsyncImage(url: url) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                } placeholder: {
-                                    Image(systemName: "person.fill")
-                                        .font(.system(size: 40))
-                                        .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
-                                }
-                                .frame(width: 80, height: 80)
-                                .clipShape(Circle())
-                            } else {
+                        if let photoURL = authController.currentUser?.photoURL,
+                           let url = URL(string: photoURL) {
+                            AsyncImage(url: url) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                            } placeholder: {
                                 Image(systemName: "person.fill")
                                     .font(.system(size: 40))
                                     .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
                             }
+                            .frame(width: 80, height: 80)
+                            .clipShape(Circle())
+                        } else {
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
                         }
-                        
-                        // Auth Provider Badge
-                        if let provider = authController.currentUser?.authProvider {
-                            HStack(spacing: 4) {
-                                Image(systemName: providerIcon(for: provider))
-                                    .font(.system(size: 12))
-                                Text("Signed in with \(providerName(for: provider))")
-                                    .font(.system(size: 12))
-                            }
-                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 20)
+                    
+                    // Auth Provider Badge
+                    if let provider = authController.currentUser?.authProvider {
+                        HStack(spacing: 4) {
+                            Image(systemName: providerIcon(for: provider))
+                                .font(.system(size: 12))
+                            Text("Signed in with \(providerName(for: provider))")
+                                .font(.system(size: 12))
                         }
+                        .foregroundColor(.secondary)
                     }
 
                     // Form Section for Profile
@@ -163,7 +139,7 @@ struct EditProfileView: View {
                         }
                     }
                     
-                    Spacer().frame(height: 80)
+                    Spacer().frame(height: 40)
                     
                     // Save Changes Button
                     Button {
@@ -198,7 +174,8 @@ struct EditProfileView: View {
                 .padding(.horizontal)
             }
         }
-        .navigationBarHidden(true)
+        .navigationTitle("Edit Profile")
+        .navigationBarTitleDisplayMode(.large)
         .onAppear {
             // Initialize form with current user data
             username = authController.currentUser?.displayName ?? ""
@@ -307,6 +284,8 @@ private struct LabeledField<Content: View>: View {
 }
 
 #Preview {
-    EditProfileView()
-        .environmentObject(AuthController())
+    NavigationStack {
+        EditProfileView()
+            .environmentObject(AuthController())
+    }
 }

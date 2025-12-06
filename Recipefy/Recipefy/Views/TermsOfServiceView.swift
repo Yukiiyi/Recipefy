@@ -15,38 +15,12 @@ struct TermsOfServiceView: View {
             Color(.systemGroupedBackground).ignoresSafeArea()
             
             ScrollView {
-                VStack(spacing: 24) {
-                    
-                    // MARK: - Back Button
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 18, weight: .semibold))
-                                
-                                Text("Back")
-                                    .font(.system(size: 17, weight: .semibold))
-                            }
-                            .foregroundColor(.green)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    
-                    
-                    // MARK: - Title
-                    Text("Terms of Service")
-                        .font(.system(size: 32, weight: .bold))
-                        .padding(.top, 20)
-                        .padding(.bottom, 12)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    
+                VStack(alignment: .leading, spacing: 24) {
                     // MARK: - Section 1
                     SectionHeader(text: "1. Introduction")
                     
                     bodyText("""
-                    Welcome to Recipefy, an app designed to provide personalized recipe suggestions based on ingredients you have on hand. By accessing and using the Recipefy mobile application (the “App”), you agree to comply with these Terms of Service (“Terms”). Please read them carefully.
+                    Welcome to Recipefy, an app designed to provide personalized recipe suggestions based on ingredients you have on hand. By accessing and using the Recipefy mobile application (the "App"), you agree to comply with these Terms of Service ("Terms"). Please read them carefully.
                     """)
 
                     // MARK: - Section 2
@@ -70,24 +44,15 @@ struct TermsOfServiceView: View {
                     Your privacy is important to us. Please refer to our Privacy Policy for details about how your information is collected, used, and protected.
                     """)
 
-                    // MARK: - Close Button
-                    Button(action: { dismiss() }) {
-                        Text("Close")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color.green)
-                            .cornerRadius(12)
-                            .shadow(color: .gray.opacity(0.4), radius: 4, x: 0, y: 4)
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, 30)
+                    Spacer().frame(height: 20)
                 }
                 .padding(.horizontal)
+                .padding(.top, 20)
+                .padding(.bottom, 30)
             }
         }
-        .navigationBarHidden(true)
+        .navigationTitle("Terms of Service")
+        .navigationBarTitleDisplayMode(.large)
     }
 
     // MARK: - Body Text Builder
@@ -96,7 +61,6 @@ struct TermsOfServiceView: View {
             .font(.system(size: 16))
             .foregroundColor(.secondary)
             .lineSpacing(6)
-            .padding(.horizontal)
     }
 }
 
@@ -108,12 +72,11 @@ private struct SectionHeader: View {
         Text(text)
             .font(.system(size: 18, weight: .bold))
             .foregroundColor(.primary)
-            .padding(.horizontal)
-            .padding(.bottom, 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 #Preview {
-    TermsOfServiceView()
+    NavigationStack {
+        TermsOfServiceView()
+    }
 }
