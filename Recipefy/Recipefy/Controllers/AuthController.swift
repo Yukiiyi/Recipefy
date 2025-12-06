@@ -21,9 +21,10 @@ final class AuthController: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var isAuthenticated = false
-    @Published var showLanding = true
+    @Published var showLanding = false  // Start hidden - let auth check decide
     @Published var startInLoginMode = true
     @Published var currentUser: AppUser?
+    @Published var isCheckingAuth = true  // Track initial auth check
     
     // MARK: - Private Properties
     private var authStateHandler: AuthStateDidChangeListenerHandle?
@@ -53,10 +54,14 @@ final class AuthController: ObservableObject {
                     self.showLanding = false
                     await self.fetchUserProfile(uid: user.uid)
                 } else {
-                    // User is signed out or anonymous
+                    // User is signed out or anonymous - show landing
                     self.isAuthenticated = false
+                    self.showLanding = true
                     self.currentUser = nil
                 }
+                
+                // Auth check complete
+                self.isCheckingAuth = false
             }
         }
     }
@@ -356,6 +361,7 @@ final class AuthController: ObservableObject {
             showLanding = true
             currentUser = nil
             errorMessage = nil
+            isCheckingAuth = false  // Reset auth check state
             
             print("✅ User signed out")
         } catch {
