@@ -527,6 +527,17 @@ In Xcode, press `⌘U` to run all tests, or use the Test Navigator (`⌘6`) to r
 
 ## 📊 Data Model
 
+### Swift Models
+
+| Model | Key Properties | Purpose |
+|-------|----------------|---------|
+| `AppUser` | uid, email, displayName, authProvider, photoURL | Firebase Auth user with provider tracking |
+| `Ingredient` | name, quantity, unit, category | Scanned ingredient with categorization |
+| `IngredientCategory` | vegetables, proteins, grains, dairy, seasonings, oil, other | Enum for ingredient classification |
+| `Recipe` | title, ingredients, steps, calories, protein, carbs, fat, fiber, sugar, favorited | AI-generated recipe with full nutrition |
+| `Scan` | userId, imagePaths, status, createdAt | Image upload metadata and processing status |
+| `DietaryPreferences` | dietTypes, allergies, dislikes, maxCookingTime | User dietary constraints for AI prompts |
+
 ### Firestore Collections
 
 ```
