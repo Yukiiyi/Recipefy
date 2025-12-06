@@ -6,14 +6,44 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct EditProfileView: View {
-    @State private var username = "SampleUser"
-    @State private var email = "sampleUser@andrew.cmu.edu"
-    @State private var password = "123456"
-    @State private var confirmPassword = "123456"
-    @State private var showAlert = false
+    @EnvironmentObject var authController: AuthController
     @Environment(\.dismiss) var dismiss
+    
+    @State private var username = ""
+    @State private var email = ""
+    @State private var showAlert = false
+    @State private var alertMessage = ""
+    @State private var isSaving = false
+    @State private var hasChanges = false
+    
+    private var originalUsername: String {
+        authController.currentUser?.displayName ?? ""
+    }
+    
+    private var originalEmail: String {
+        authController.currentUser?.email ?? ""
+    }
+    
+    // Check if user has linked accounts (multiple providers)
+    private var hasLinkedAccounts: Bool {
+        guard let user = Auth.auth().currentUser else { return false }
+        return user.providerData.count > 1
+    }
+    
+    // Check if user signed in with email (can change password and email)
+    // BUT not if they have linked accounts (to avoid confusion)
+    private var canChangePassword: Bool {
+        guard authController.currentUser?.authProvider == .email else { return false }
+        return !hasLinkedAccounts
+    }
+    
+    private var canChangeEmail: Bool {
+        guard authController.currentUser?.authProvider == .email else { return false }
+        return !hasLinkedAccounts
+    }
     
     var body: some View {
         ZStack {
@@ -21,63 +51,120 @@ struct EditProfileView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
-                     // MARK: - Back Button
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 18, weight: .semibold))
-                                
-                                Text("Back")
-                                    .font(.system(size: 17, weight: .semibold))
+                    // Profile Photo
+                    ZStack {
+                        Circle()
+                            .fill(Color(red: 0.36, green: 0.72, blue: 0.36).opacity(0.2))
+                            .frame(width: 80, height: 80)
+                        
+                        if let photoURL = authController.currentUser?.photoURL,
+                           let url = URL(string: photoURL) {
+                            AsyncImage(url: url) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                            } placeholder: {
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
                             }
-                            .foregroundColor(.green)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-
-
-                    VStack(spacing: 12) {
-                        Text("Edit Profile")
-                            .font(.system(size: 32, weight: .bold))
-                            .padding(.top, 40)
-                            .padding(.bottom, 10)
-                        
-                        ZStack {
-                            Circle()
-                                .fill(Color(red: 0.36, green: 0.72, blue: 0.36).opacity(0.2))
-                                .frame(width: 80, height: 80)
+                            .frame(width: 80, height: 80)
+                            .clipShape(Circle())
+                        } else {
                             Image(systemName: "person.fill")
                                 .font(.system(size: 40))
                                 .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
                         }
-                        
+                    }
+                    .padding(.top, 20)
+                    
+                    // Auth Provider Badge
+                    if let user = Auth.auth().currentUser {
+                        if hasLinkedAccounts {
+                            // Show all linked providers
+                            VStack(spacing: 4) {
+                                Text("Linked Accounts:")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                HStack(spacing: 8) {
+                                    ForEach(user.providerData, id: \.providerID) { providerInfo in
+                                        HStack(spacing: 4) {
+                                            Image(systemName: iconForProviderId(providerInfo.providerID))
+                                                .font(.system(size: 12))
+                                            Text(nameForProviderId(providerInfo.providerID))
+                                                .font(.system(size: 12))
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color(.tertiarySystemGroupedBackground))
+                                        .cornerRadius(8)
+                                    }
+                                }
+                                .foregroundColor(.secondary)
+                            }
+                        } else if let provider = authController.currentUser?.authProvider {
+                            // Show single provider
+                            HStack(spacing: 4) {
+                                Image(systemName: providerIcon(for: provider))
+                                    .font(.system(size: 12))
+                                Text("Signed in with \(providerName(for: provider))")
+                                    .font(.system(size: 12))
+                            }
+                            .foregroundColor(.secondary)
+                        }
                     }
 
                     // Form Section for Profile
-                    LabeledField(label: "Username", systemImage: "person.fill") {
-                        TextField("Enter your username", text: $username)
-                            .autocapitalization(.none)
+                    LabeledField(label: "Display Name", systemImage: "person.fill") {
+                        TextField("Enter your name", text: $username)
+                            .autocapitalization(.words)
+                            .onChange(of: username) { _, _ in
+                                updateHasChanges()
+                            }
                     }
 
                     LabeledField(label: "Email", systemImage: "envelope.fill") {
-                        TextField("your.email@example.com", text: $email)
-                            .textContentType(.emailAddress)
-                            .keyboardType(.emailAddress)
-                            .autocapitalization(.none)
-                    }
-                        
-                    Button {
-                        if password != confirmPassword {
-                            showAlert = true
+                        if canChangeEmail {
+                            TextField("your.email@example.com", text: $email)
+                                .textContentType(.emailAddress)
+                                .keyboardType(.emailAddress)
+                                .autocapitalization(.none)
+                                .onChange(of: email) { _, _ in
+                                    updateHasChanges()
+                                }
                         } else {
-                            // Handle Save Logic
-                            // E.g., update the user profile with new data
+                            // Read-only email for Google/Apple users
+                            Text(email)
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                    } label: {
+                    }
+                    
+                    // Note about email changes (only for email auth users)
+                    if canChangeEmail && email != originalEmail && !email.isEmpty {
+                        Text("A verification email will be sent to confirm the new email address.")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 4)
+                    }
+                    
+                    // Explanation for OAuth users or linked accounts
+                    if !canChangeEmail {
+                        if hasLinkedAccounts {
+                            Text("You have linked multiple sign-in methods. Email and password cannot be changed to avoid conflicts between providers.")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 4)
+                        } else {
+                            Text("Email is managed by your \(providerName(for: authController.currentUser?.authProvider ?? .email)) account and cannot be changed here.")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 4)
+                        }
+                    }
+                    
+                    // Reset Password - only for email auth
+                    if canChangePassword {
                         NavigationLink(destination: ResetPasswordView()) {
                             Text("Reset Password")
                                 .font(.system(size: 17, weight: .semibold))
@@ -90,27 +177,34 @@ struct EditProfileView: View {
                                     RoundedRectangle(cornerRadius: 12)
                                         .stroke(Color.green, lineWidth: 2)
                                 )
-                                .shadow(color: .gray.opacity(1), radius: 4, x: 0, y: 4)
+                                .shadow(color: .gray.opacity(0.3), radius: 4, x: 0, y: 4)
                         }
                     }
                     
-                    Spacer().frame(height: 140)
+                    Spacer().frame(height: 40)
                     
                     // Save Changes Button
                     Button {
-                        // Handle Save Logic
+                        Task {
+                            await saveChanges()
+                        }
                     } label: {
-                        Text("Save Profile")
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color.green)
-                            .cornerRadius(12)
-                            
+                        HStack {
+                            if isSaving {
+                                ProgressView()
+                                    .tint(.white)
+                            }
+                            Text("Save Profile")
+                        }
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(hasChanges ? Color.green : Color.gray)
+                        .cornerRadius(12)
                     }
+                    .disabled(!hasChanges || isSaving)
                     .padding(.horizontal)
-                    .padding(.top, 0)
 
                     Button(action: { dismiss() }) {
                         Text("Cancel")
@@ -118,12 +212,111 @@ struct EditProfileView: View {
                             .foregroundColor(.gray)
                     }
                     .padding(.bottom, 20)
-
                 }
                 .padding(.horizontal)
             }
         }
-        .navigationBarHidden(true)
+        .navigationTitle("Edit Profile")
+        .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            // Initialize form with current user data
+            username = authController.currentUser?.displayName ?? ""
+            email = authController.currentUser?.email ?? ""
+        }
+        .alert("Profile Update", isPresented: $showAlert) {
+            Button("OK") {
+                if alertMessage.contains("successfully") {
+                    dismiss()
+                }
+            }
+        } message: {
+            Text(alertMessage)
+        }
+    }
+    
+    // MARK: - Helper to check if there are changes
+    private func updateHasChanges() {
+        let nameChanged = username != originalUsername
+        let emailChanged = canChangeEmail && email != originalEmail
+        hasChanges = nameChanged || emailChanged
+    }
+    
+    // MARK: - Save Changes
+    private func saveChanges() async {
+        isSaving = true
+        
+        var success = true
+        var messages: [String] = []
+        
+        // Update display name if changed
+        if username != originalUsername && !username.isEmpty {
+            let result = await authController.updateDisplayName(to: username)
+            if result {
+                messages.append("Name updated")
+            } else {
+                success = false
+                messages.append(authController.errorMessage ?? "Failed to update name")
+            }
+        }
+        
+        // Update email if changed (only for email auth users)
+        if canChangeEmail && email != originalEmail && !email.isEmpty {
+            let result = await authController.updateEmail(to: email)
+            if result {
+                messages.append("Verification email sent to \(email)")
+            } else {
+                success = false
+                messages.append(authController.errorMessage ?? "Failed to update email")
+            }
+        }
+        
+        isSaving = false
+        
+        if messages.isEmpty {
+            alertMessage = "No changes to save"
+        } else if success {
+            alertMessage = "Profile updated successfully!\n" + messages.joined(separator: "\n")
+        } else {
+            alertMessage = messages.joined(separator: "\n")
+        }
+        showAlert = true
+    }
+    
+    // MARK: - Helper Functions
+    private func providerIcon(for provider: AppUser.AuthProvider) -> String {
+        switch provider {
+        case .email: return "envelope.fill"
+        case .apple: return "apple.logo"
+        case .google: return "g.circle.fill"
+        }
+    }
+    
+    private func providerName(for provider: AppUser.AuthProvider) -> String {
+        switch provider {
+        case .email: return "Email"
+        case .apple: return "Apple"
+        case .google: return "Google"
+        }
+    }
+    
+    // Helper to convert Firebase provider ID to icon
+    private func iconForProviderId(_ providerID: String) -> String {
+        switch providerID {
+        case "password": return "envelope.fill"
+        case "apple.com": return "apple.logo"
+        case "google.com": return "g.circle.fill"
+        default: return "questionmark.circle"
+        }
+    }
+    
+    // Helper to convert Firebase provider ID to name
+    private func nameForProviderId(_ providerID: String) -> String {
+        switch providerID {
+        case "password": return "Email"
+        case "apple.com": return "Apple"
+        case "google.com": return "Google"
+        default: return providerID
+        }
     }
 }
 
@@ -153,5 +346,8 @@ private struct LabeledField<Content: View>: View {
 }
 
 #Preview {
-    EditProfileView()
+    NavigationStack {
+        EditProfileView()
+            .environmentObject(AuthController())
+    }
 }

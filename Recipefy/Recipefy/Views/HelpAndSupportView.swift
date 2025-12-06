@@ -17,34 +17,10 @@ struct HelpAndSupportView: View {
                 .ignoresSafeArea()
             
             ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
-                    
-                    // MARK: - Back Button
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 18, weight: .semibold))
-                                
-                                Text("Back")
-                                    .font(.system(size: 17, weight: .semibold))
-                            }
-                            .foregroundColor(.green)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-                    
-                    // MARK: - Title
-                    Text("Help & Support")
-                        .font(.system(size: 32, weight: .bold))
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 10)
+                VStack(alignment: .leading, spacing: 24) {
                     
                     // MARK: - FAQ Section
-                    TOOSectionHeader(text: "Frequently Asked Questions")
+                    SectionHeader(text: "Frequently Asked Questions")
                     
                     VStack(spacing: 16) {
                         FAQItem(
@@ -62,18 +38,16 @@ struct HelpAndSupportView: View {
                             answer: "Set your allergies and restrictions in the Dietary Preferences section to get recipe suggestions tailored to you."
                         )
                     }
-                    .padding(.horizontal)
                     
-                    Spacer()
+                    Spacer().frame(height: 20)
                     
                     // MARK: - Contact Section
-                    TOOSectionHeader(text: "Contact Support")
+                    SectionHeader(text: "Contact Support")
                     
-                    Text("If you’re experiencing issues or have questions, feel free to reach out to us anytime.")
+                    Text("If you're experiencing issues or have questions, feel free to reach out to us anytime.")
                         .font(.system(size: 16))
                         .foregroundColor(.secondary)
                         .lineSpacing(6)
-                        .padding(.horizontal)
                     
                     Button(action: {
                         sendEmail()
@@ -87,7 +61,8 @@ struct HelpAndSupportView: View {
                             .cornerRadius(12)
                             .shadow(color: .gray.opacity(0.4), radius: 4, x: 0, y: 4)
                     }
-                    .padding(.horizontal)
+                    
+                    Spacer().frame(height: 20)
                     
                     // MARK: - App Info Footer
                     VStack(spacing: 4) {
@@ -100,12 +75,14 @@ struct HelpAndSupportView: View {
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 20)
                     .padding(.bottom, 30)
                 }
+                .padding(.horizontal)
+                .padding(.top, 20)
             }
         }
-        .navigationBarHidden(true)
+        .navigationTitle("Help & Support")
+        .navigationBarTitleDisplayMode(.large)
     }
     
     // Fake email action
@@ -115,15 +92,13 @@ struct HelpAndSupportView: View {
 }
 
 // MARK: - Section Header
-private struct TOOSectionHeader: View {
+private struct SectionHeader: View {
     let text: String
     
     var body: some View {
         Text(text)
             .font(.system(size: 18, weight: .bold))
             .foregroundColor(.primary)
-            .padding(.horizontal)
-            .padding(.bottom, 4)
     }
 }
 
@@ -151,5 +126,7 @@ private struct FAQItem: View {
 }
 
 #Preview {
-    HelpAndSupportView()
+    NavigationStack {
+        HelpAndSupportView()
+    }
 }
