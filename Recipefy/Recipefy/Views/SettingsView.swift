@@ -127,17 +127,46 @@ struct SettingsView: View {
         let db = Firestore.firestore()
         
         do {
-            // Load recipes count
-            let recipesSnapshot = try await db.collection("users").document(uid).collection("recipes").getDocuments()
+            // Run recipes and scans queries in parallel
+            async let recipesTask = db.collection("recipes")
+                .whereField("createdBy", isEqualTo: uid)
+                .getDocuments()
+            
+            async let scansTask = db.collection("scans")
+                .whereField("userId", isEqualTo: uid)
+                .getDocuments()
+            
+            // Await both in parallel
+            let (recipesSnapshot, scansSnapshot) = try await (recipesTask, scansTask)
+            
+            // Process recipes (no additional queries needed)
             recipesCount = recipesSnapshot.documents.count
+            favoritesCount = recipesSnapshot.documents.filter { doc in
+                (doc.data()["favorited"] as? Bool) == true
+            }.count
             
-            // Load ingredients count
-            let ingredientsSnapshot = try await db.collection("users").document(uid).collection("ingredients").getDocuments()
-            ingredientsCount = ingredientsSnapshot.documents.count
-            
-            // Load favorites count (saved recipes)
-            let favoritesSnapshot = try await db.collection("users").document(uid).collection("favorites").getDocuments()
-            favoritesCount = favoritesSnapshot.documents.count
+            // Process ingredients in parallel
+            let ingredientCounts = await withTaskGroup(of: Int.self) { group in
+                for scanDoc in scansSnapshot.documents {
+                    group.addTask {
+                        do {
+                            let ingredientsSnapshot = try await scanDoc.reference
+                                .collection("ingredients")
+                                .getDocuments()
+                            return ingredientsSnapshot.documents.count
+                        } catch {
+                            return 0
+                        }
+                    }
+                }
+                
+                var total = 0
+                for await count in group {
+                    total += count
+                }
+                return total
+            }
+            ingredientsCount = ingredientCounts
             
         } catch {
             print("Error loading stats: \(error)")
@@ -157,15 +186,30 @@ private extension SettingsView {
                     .fill(Color.green.opacity(0.15))
                     .frame(width: 80, height: 80)
                 
-                Image(systemName: "person.fill")
-                    .font(.system(size: 36))
-                    .foregroundColor(.green)
+                if let photoURL = authController.currentUser?.photoURL,
+                   let url = URL(string: photoURL) {
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 36))
+                            .foregroundColor(.green)
+                    }
+                    .frame(width: 80, height: 80)
+                    .clipShape(Circle())
+                } else {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 36))
+                        .foregroundColor(.green)
+                }
             }
             
-            Text("Name")
+            Text(authController.currentUser?.displayName ?? "User")
                 .font(.system(size: 20, weight: .semibold))
             
-            Text("xxx@andrew.cmu.edu")
+            Text(authController.currentUser?.email ?? "")
                 .font(.system(size: 14))
                 .foregroundColor(.secondary)
             

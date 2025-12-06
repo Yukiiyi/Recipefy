@@ -8,24 +8,28 @@
 import SwiftUI
 import FirebaseCore
 import FirebaseAuth
+import FirebaseFirestore
+import GoogleSignIn
 
 class AppDelegate: NSObject, UIApplicationDelegate {
-  func application(_ application: UIApplication,
-                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-    FirebaseApp.configure()
-      
-    if Auth.auth().currentUser == nil {
-        Auth.auth().signInAnonymously { result, error in
-            if let error = error {
-                print("Firebase anonymous sign-in error:", error)
-          } else if let user = result?.user {
-              print("Signed in as:", user.uid)
-          }
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        FirebaseApp.configure()
+        
+        // Pre-warm Firestore connection to avoid cold start delays later
+        // This establishes the connection in the background
+        Task {
+            let db = Firestore.firestore()
+            _ = try? await db.collection("_warmup").document("ping").getDocument()
         }
-      }
-
-    return true
-  }
+        
+        return true
+    }
+    
+    // Handle Google Sign-In URL callback
+    func application(_ app: UIApplication,
+                     open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        return GIDSignIn.sharedInstance.handle(url)
+    }
 }
-
-

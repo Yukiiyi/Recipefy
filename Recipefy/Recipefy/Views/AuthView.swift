@@ -13,10 +13,14 @@ struct AuthView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var isLoginMode = true
     @State private var username = ""
-    @State private var email = "sampleUser@andrew.cmu.edu"
-    @State private var password = "123456"
+    @State private var email = ""
+    @State private var password = ""
     @State private var confirmPassword = ""
     @State private var hasSetInitialMode = false
+    @State private var showForgotPassword = false
+    @State private var resetEmail = ""
+    @State private var showResetAlert = false
+    @State private var resetAlertMessage = ""
 
     var body: some View {
         ZStack {
@@ -64,7 +68,7 @@ struct AuthView: View {
                                 .resizable()
                                 .frame(width: 18, height: 18)
                             
-                            Text(isLoginMode ? "Sign in with Google" : "Sign up with Google")
+                            Text("Continue with Google")
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(.primary)
                         }
@@ -77,14 +81,16 @@ struct AuthView: View {
                         )
                         .cornerRadius(8)
                         .contentShape(Rectangle())
-                        .accessibilityLabel(isLoginMode ? "Sign in with Google" : "Sign up with Google")
+                        .accessibilityLabel("Continue with Google")
                     }
                     .buttonStyle(.plain)
                     .disabled(controller.isLoading)
 
 
                         SignInWithAppleButton(
-                            onRequest: { $0.requestedScopes = [.fullName, .email] },
+                            onRequest: { request in
+                                controller.prepareAppleSignInRequest(request)
+                            },
                             onCompletion: { result in
                                 Task { await controller.handleAppleSignIn(result: result) }
                             }
@@ -118,7 +124,7 @@ struct AuthView: View {
                         }
 
                         LabeledField(label: "Email", systemImage: "envelope.fill") {
-                            TextField("your.email@example.com", text: $email)
+                            TextField("Enter your email", text: $email)
                                 .textContentType(.emailAddress)
                                 .keyboardType(.emailAddress)
                                 .autocapitalization(.none)
@@ -127,6 +133,22 @@ struct AuthView: View {
                         LabeledField(label: "Password", systemImage: "lock.fill") {
                             SecureField("Enter your password", text: $password)
                                 .textContentType(isLoginMode ? .password : .newPassword)
+                        }
+                        
+                        // Forgot Password link (only in login mode)
+                        if isLoginMode {
+                            HStack {
+                                Spacer()
+                                Button {
+                                    resetEmail = email  // Pre-fill with entered email
+                                    showForgotPassword = true
+                                } label: {
+                                    Text("Forgot Password?")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
 
                         if !isLoginMode {
@@ -178,6 +200,30 @@ struct AuthView: View {
                 isLoginMode = controller.startInLoginMode
                 hasSetInitialMode = true
             }
+        }
+        .alert("Reset Password", isPresented: $showForgotPassword) {
+            TextField("Enter your email", text: $resetEmail)
+                .textContentType(.emailAddress)
+                .autocapitalization(.none)
+            Button("Cancel", role: .cancel) { }
+            Button("Send Reset Link") {
+                Task {
+                    let success = await controller.sendPasswordReset(to: resetEmail)
+                    if success {
+                        resetAlertMessage = "A password reset link has been sent to \(resetEmail).\n\nCheck your inbox and spam/junk folder."
+                    } else {
+                        resetAlertMessage = controller.errorMessage ?? "Failed to send reset email."
+                    }
+                    showResetAlert = true
+                }
+            }
+        } message: {
+            Text("Enter the email address associated with your account.")
+        }
+        .alert("Password Reset", isPresented: $showResetAlert) {
+            Button("OK") { }
+        } message: {
+            Text(resetAlertMessage)
         }
     }
 }
