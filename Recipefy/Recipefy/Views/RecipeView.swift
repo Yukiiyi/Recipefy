@@ -74,6 +74,7 @@ struct RecipeCard: View {
 							.lineLimit(2)
 							.minimumScaleFactor(0.8)
 							.foregroundColor(.primary)
+							.multilineTextAlignment(.leading)
 							
 						Spacer()
 							
