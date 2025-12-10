@@ -35,10 +35,10 @@ struct LandingView: View {
                     
                     // Tagline
                     VStack(spacing: 4) {
-                        Text("Make Food")
+                        Text("Cook What You")
                             .font(.system(size: 26, weight: .bold))
                             .foregroundColor(.primary)
-                        Text("With Wasted Food")
+                        Text("Already Have")
                             .font(.system(size: 26, weight: .bold))
                             .foregroundColor(.primary)
                     }
