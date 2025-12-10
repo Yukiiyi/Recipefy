@@ -120,7 +120,8 @@ final class FirebaseFirestoreService: FirestoreServiceProtocol {
         "createdAt": Timestamp(date: Date())
       ]
       
-      try await db.collection("recipes").addDocument(data: recipeData)
+			let docRef = db.collection("recipes").document(recipe.recipeID)
+			try await docRef.setData(recipeData, merge: true)
     }
   }
   
