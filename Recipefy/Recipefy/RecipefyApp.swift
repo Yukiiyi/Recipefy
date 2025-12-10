@@ -30,25 +30,29 @@ struct RecipefyApp: App {
 
   var body: some Scene {
     WindowGroup {
-      if authController.showLanding {
-        // Show landing page (initial load or after logout)
-        LandingView(showLanding: $authController.showLanding)
+      Group {
+        if authController.showLanding {
+          // Show landing page (initial load or after logout)
+          LandingView(showLanding: $authController.showLanding)
+            .environmentObject(authController)
+        } else if authController.isAuthenticated {
+          // Show main app after authentication
+          NavigationBarView()
+            .environmentObject(navigationState)
+            .environmentObject(authController)
+            .environmentObject(scanController)
+            .environmentObject(ingredientController)
+            .environmentObject(recipeController)
+        } else {
+          // Show authentication view
+          NavigationView {
+            AuthView()
+          }
           .environmentObject(authController)
-      } else if authController.isAuthenticated {
-        // Show main app after authentication
-        NavigationBarView()
-          .environmentObject(navigationState)
-          .environmentObject(authController)
-          .environmentObject(scanController)
-          .environmentObject(ingredientController)
-          .environmentObject(recipeController)
-      } else {
-        // Show authentication view
-        NavigationView {
-          AuthView()
         }
-        .environmentObject(authController)
       }
+      .opacity(authController.isCheckingAuth ? 0 : 1)
+      .animation(.easeIn(duration: 0.2), value: authController.isCheckingAuth)
     }
   }
 }
