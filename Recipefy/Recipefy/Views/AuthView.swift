@@ -30,14 +30,16 @@ struct AuthView: View {
                 VStack(spacing: 32) {
                     // Branding
                     VStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(Color(red: 0.36, green: 0.72, blue: 0.36).opacity(0.2))
-                                .frame(width: 80, height: 80)
-                            Image(systemName: "fork.knife.circle.fill")
-                                .font(.system(size: 40))
-                                .foregroundColor(Color(red: 0.36, green: 0.72, blue: 0.36))
-                        }
+                        // App Logo
+                        Image("AppLogo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                            )
                         Text("Recipefy")
                             .font(.system(size: 32, weight: .bold))
                         Text("Turn ingredients into delicious meals")
