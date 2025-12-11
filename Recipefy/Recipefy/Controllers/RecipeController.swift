@@ -14,7 +14,7 @@ import Combine
 @MainActor
 final class RecipeController: ObservableObject {
 	@Published var statusText = "Idle"
-  @Published var currentRecipes: [Recipe]?
+	@Published var currentRecipes: [Recipe]?
 	@Published var favoriteRecipes: [Recipe]?
 	@Published var isRetrieving = false
 	@Published var isSaving = false
@@ -22,9 +22,14 @@ final class RecipeController: ObservableObject {
 	@Published var lastGeneratedScanId: String?
 	@Published var isLoadingMore = false
     
-  private let geminiService: GeminiServiceProtocol
+	private let geminiService: GeminiServiceProtocol
 	private let firestoreService: FirestoreServiceProtocol
 	private var lastFormattedIngredients: [String] = []
+	
+	/// Whether we have ingredients available to generate more recipes
+	var canGenerateMore: Bool {
+		!lastFormattedIngredients.isEmpty
+	}
 	
 	init(geminiService: GeminiServiceProtocol, firestoreService: FirestoreServiceProtocol) {
 		self.geminiService = geminiService
