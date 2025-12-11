@@ -141,6 +141,22 @@ final class RecipeController: ObservableObject {
 			favoriteRecipes?.first(where: { $0.recipeID == recipeID })?.favorited ??
 			false
 		
+		// Update favoriteRecipes array immediately based on new value
+		if newValue {
+			// Adding to favorites - add to favoriteRecipes if not already there
+			if let recipe = currentRecipes?.first(where: { $0.recipeID == recipeID }),
+			   favoriteRecipes?.contains(where: { $0.recipeID == recipeID }) == false {
+				if favoriteRecipes == nil {
+					favoriteRecipes = [recipe]
+				} else {
+					favoriteRecipes?.append(recipe)
+				}
+			}
+		} else {
+			// Removing from favorites - remove from favoriteRecipes
+			favoriteRecipes?.removeAll(where: { $0.recipeID == recipeID })
+		}
+		
 		// Persist to Firestore
 		Task {
 			do {
