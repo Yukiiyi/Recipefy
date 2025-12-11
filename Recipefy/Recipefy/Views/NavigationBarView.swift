@@ -26,29 +26,17 @@ struct NavigationBarView: View {
             
             // Tab 2: Ingredients
             NavigationStack {
-                if let scanId = scanController.currentScanId {
-                    // Show IngredientListView if we have a scan
-                    // Use image data if available (fresh scan), otherwise empty array (loaded from DB)
-                    let imageData = scanController.currentImageData ?? []
-                    IngredientListView(
-                        scanId: scanId,
-                        imageDataArray: imageData
-                    )
-                    .navigationTitle("My Ingredients")
-                } else {
-                    EmptyStateView(
-                        icon: "camera.fill",
-                        title: "No Ingredients Yet",
-                        message: "Scan ingredients to get started",
-                        buttonText: nil,
-                        buttonAction: nil
-                    )
-                    .navigationTitle("My Ingredients")
-                }
+                // Always show IngredientListView
+                // Use image data if available (fresh scan), otherwise empty array (loaded from DB)
+                let imageData = scanController.currentImageData ?? []
+                IngredientListView(
+                    scanId: scanController.currentScanId,
+                    imageDataArray: imageData
+                )
+                .navigationTitle("My Ingredients")
             }
             .task {
-                // Only load from DB if we don't have a fresh scan with image data
-                // like if user manually opened this tab without going through the scan flow
+                // Only load from DB if we have a scanId
                 if let scanId = scanController.currentScanId,
                    scanController.currentImageData == nil,
                    !ingredientController.isAnalyzing {
