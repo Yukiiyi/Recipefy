@@ -59,4 +59,22 @@ final class ScanController: ObservableObject {
       statusText = "Error: \(error.localizedDescription)"
     }
   }
+  
+  /// Creates a manual scan without images (for manual ingredient entry)
+  func createManualScan() async {
+    guard let uid = Auth.auth().currentUser?.uid else {
+      return
+    }
+    
+    do {
+      // Create scan with empty imagePaths array
+      let id = try await scans.createScan(userId: uid, imagePaths: [])
+      currentScanId = id
+      currentImageData = nil
+      // Don't set statusText here - it causes a flash of error screen
+    } catch {
+      // Silently fail - loadIngredients will show appropriate empty state
+      print("Error creating manual scan: \(error.localizedDescription)")
+    }
+  }
 }

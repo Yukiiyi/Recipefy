@@ -14,7 +14,7 @@ import Combine
 @MainActor
 final class RecipeController: ObservableObject {
 	@Published var statusText = "Idle"
-  @Published var currentRecipes: [Recipe]?
+	@Published var currentRecipes: [Recipe]?
 	@Published var favoriteRecipes: [Recipe]?
 	@Published var isRetrieving = false
 	@Published var isSaving = false
@@ -22,9 +22,14 @@ final class RecipeController: ObservableObject {
 	@Published var lastGeneratedScanId: String?
 	@Published var isLoadingMore = false
     
-  private let geminiService: GeminiServiceProtocol
+	private let geminiService: GeminiServiceProtocol
 	private let firestoreService: FirestoreServiceProtocol
 	private var lastFormattedIngredients: [String] = []
+	
+	/// Whether we have ingredients available to generate more recipes
+	var canGenerateMore: Bool {
+		!lastFormattedIngredients.isEmpty
+	}
 	
 	init(geminiService: GeminiServiceProtocol, firestoreService: FirestoreServiceProtocol) {
 		self.geminiService = geminiService
@@ -140,6 +145,22 @@ final class RecipeController: ObservableObject {
 			currentRecipes?.first(where: { $0.recipeID == recipeID })?.favorited ??
 			favoriteRecipes?.first(where: { $0.recipeID == recipeID })?.favorited ??
 			false
+		
+		// Update favoriteRecipes array immediately based on new value
+		if newValue {
+			// Adding to favorites - add to favoriteRecipes if not already there
+			if let recipe = currentRecipes?.first(where: { $0.recipeID == recipeID }),
+			   favoriteRecipes?.contains(where: { $0.recipeID == recipeID }) == false {
+				if favoriteRecipes == nil {
+					favoriteRecipes = [recipe]
+				} else {
+					favoriteRecipes?.append(recipe)
+				}
+			}
+		} else {
+			// Removing from favorites - remove from favoriteRecipes
+			favoriteRecipes?.removeAll(where: { $0.recipeID == recipeID })
+		}
 		
 		// Persist to Firestore
 		Task {

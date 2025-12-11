@@ -78,8 +78,12 @@ struct HomeView: View {
             )
           }
           .buttonStyle(.plain)
+          
           // My Ingredients Row
-          NavigationLink(destination: MyIngredientsRouteView()) {
+          Button {
+            // Switch to Ingredients tab
+            navigationState.navigateToTab(.ingredients)
+          } label: {
             QuickActionRow(
               icon: "list.bullet.rectangle",
               title: "My Ingredients",
@@ -89,7 +93,10 @@ struct HomeView: View {
           .buttonStyle(.plain)
           
           // Browse Recipes Row
-          NavigationLink(destination: BrowseRecipesRouteView()) {
+          Button {
+            // Switch to Recipes tab
+            navigationState.navigateToTab(.recipes)
+          } label: {
             QuickActionRow(
               icon: "fork.knife",
               title: "Browse Recipes",
@@ -157,103 +164,4 @@ struct QuickActionRow: View {
 
 #Preview {
   HomeView()
-}
-
-// MARK: - Inline placeholder screens (kept private to this file)
-
-// Route view for My Ingredients that uses shared controllers from environment
-private struct MyIngredientsRouteView: View {
-  @EnvironmentObject var scanController: ScanController
-  @EnvironmentObject var ingredientController: IngredientController
-  
-  var body: some View {
-    Group {
-      if let ingredients = ingredientController.currentIngredients,
-         !ingredients.isEmpty,
-         let scanId = scanController.currentScanId {
-        IngredientListView(
-          scanId: scanId,
-          imageDataArray: scanController.currentImageData ?? []
-        )
-      } else {
-        EmptyStateView(
-          icon: "camera.fill",
-          title: "No Ingredients Yet",
-          message: "Scan ingredients to get started",
-          buttonText: nil,
-          buttonAction: nil
-        )
-      }
-    }
-    .navigationTitle("My Ingredients")
-    .task {
-      // Load ingredients from Firestore if needed
-      if let scanId = scanController.currentScanId {
-        let needsLoad = ingredientController.currentIngredients == nil || 
-                        ingredientController.currentScanId != scanId
-        
-        if needsLoad && !ingredientController.isAnalyzing {
-          await ingredientController.loadIngredients(scanId: scanId)
-        }
-      }
-    }
-  }
-}
-
-// Route view for Browse Recipes that uses shared controller from environment
-private struct BrowseRecipesRouteView: View {
-  @EnvironmentObject var recipeController: RecipeController
-  
-  var body: some View {
-    Group {
-      if recipeController.isRetrieving {
-        VStack {
-          ProgressView()
-          Text("Loading recipes...")
-            .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-      } else if let recipes = recipeController.currentRecipes, !recipes.isEmpty {
-        // Show recipe cards
-        VStack(spacing: 12) {
-          // Header with count
-          HStack {
-            Text("Recipe Suggestions")
-              .font(.title2).bold()
-            Spacer()
-            Text("\(recipes.count)")
-              .font(.subheadline.monospacedDigit())
-              .foregroundColor(.secondary)
-          }
-          .padding(.horizontal, 16)
-          
-          TabView {
-            ForEach(recipes, id: \.recipeID) { recipe in
-              RecipeCard(recipe: recipe)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-            }
-          }
-          .tabViewStyle(.page(indexDisplayMode: .automatic))
-          .indexViewStyle(.page(backgroundDisplayMode: .always))
-        }
-        .padding(.top, 8)
-      } else {
-        EmptyStateView(
-          icon: "fork.knife",
-          title: "No Recipes Yet",
-          message: "Generate recipes from your scanned ingredients",
-          buttonText: nil,
-          buttonAction: nil
-        )
-      }
-    }
-    .navigationTitle("Recipes")
-    .task {
-      // Load recipes from Firestore if needed
-      if recipeController.currentRecipes == nil && !recipeController.isRetrieving {
-        await recipeController.loadRecipes()
-      }
-    }
-  }
 }

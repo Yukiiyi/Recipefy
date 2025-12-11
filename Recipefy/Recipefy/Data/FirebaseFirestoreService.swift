@@ -119,8 +119,9 @@ final class FirebaseFirestoreService: FirestoreServiceProtocol {
         "favorited": recipe.favorited,
         "createdAt": Timestamp(date: Date())
       ]
-      
-      try await db.collection("recipes").addDocument(data: recipeData)
+      // Use the recipe's UUID as the document ID and merge to preserve any existing fields (like favorited)
+			let docRef = db.collection("recipes").document(recipe.recipeID)
+			try await docRef.setData(recipeData, merge: true)
     }
   }
   

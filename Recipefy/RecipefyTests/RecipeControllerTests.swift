@@ -182,14 +182,15 @@ struct RecipeControllerTests {
     #expect(sut.currentRecipes?.first?.favorited == false)
   }
   
-  @Test("toggleFavorite flips favorited in favoriteRecipes")
+  @Test("toggleFavorite removes unfavorited recipe from favoriteRecipes")
   func toggleFavorite_flipsInFavoriteRecipes() async throws {
     let (sut, _, _) = createSUT()
     
     sut.favoriteRecipes = [createMockRecipe(id: "fav1", favorited: true)]
     
     sut.toggleFavorite(for: "fav1")
-    #expect(sut.favoriteRecipes?.first?.favorited == false)
+    // When unfavoriting, the recipe is removed from favoriteRecipes
+    #expect(sut.favoriteRecipes?.isEmpty == true)
   }
   
   @Test("toggleFavorite updates both currentRecipes and favoriteRecipes if present")
@@ -361,6 +362,78 @@ struct RecipeControllerTests {
     )
     
     #expect(raw.favorited == nil)
+  }
+  
+  // MARK: - canGenerateMore Tests
+  
+  @Test("canGenerateMore is false initially")
+  func canGenerateMore_initiallyFalse() async throws {
+    let (sut, _, _) = createSUT()
+    
+    #expect(sut.canGenerateMore == false)
+  }
+  
+  @Test("canGenerateMore is true after getRecipe with ingredients")
+  func canGenerateMore_trueAfterGetRecipe() async throws {
+    let (sut, gemini, _) = createSUT()
+    gemini.mockRecipes = [createMockRecipe()]
+    
+    let ingredients = [
+      Ingredient(id: "1", name: "Chicken", quantity: "500", unit: "gram", category: .proteins)
+    ]
+    
+    await sut.getRecipe(ingredients: ingredients)
+    
+    #expect(sut.canGenerateMore == true)
+  }
+  
+  @Test("canGenerateMore remains false after loadRecipes from DB")
+  func canGenerateMore_falseAfterLoadRecipes() async throws {
+    let (sut, _, firestore) = createSUT()
+    firestore.mockRecipes = [createMockRecipe()]
+    
+    // Loading from DB doesn't set ingredients, so canGenerateMore should stay false
+    await sut.loadRecipes()
+    
+    #expect(sut.canGenerateMore == false)
+  }
+  
+  // MARK: - loadMoreRecipesIfNeeded Tests
+  
+  @Test("loadMoreRecipesIfNeeded does nothing when canGenerateMore is false")
+  func loadMoreRecipesIfNeeded_noIngredientsDoesNothing() async throws {
+    let (sut, gemini, _) = createSUT()
+    gemini.mockRecipes = [createMockRecipe()]
+    
+    await sut.loadMoreRecipesIfNeeded()
+    
+    // Should not call gemini since no ingredients available
+    #expect(gemini.getRecipeCallCount == 0)
+    #expect(sut.currentRecipes == nil)
+  }
+  
+  @Test("loadMoreRecipesIfNeeded generates more recipes when ingredients available")
+  func loadMoreRecipesIfNeeded_withIngredientsGeneratesMore() async throws {
+    let (sut, gemini, _) = createSUT()
+    let recipe1 = createMockRecipe(id: "r1", title: "Recipe 1")
+    let recipe2 = createMockRecipe(id: "r2", title: "Recipe 2")
+    gemini.mockRecipes = [recipe1]
+    
+    let ingredients = [
+      Ingredient(id: "1", name: "Chicken", quantity: "500", unit: "gram", category: .proteins)
+    ]
+    
+    // First call to getRecipe sets up ingredients
+    await sut.getRecipe(ingredients: ingredients)
+    #expect(gemini.getRecipeCallCount == 1)
+    #expect(sut.currentRecipes?.count == 1)
+    
+    // Now loadMoreRecipesIfNeeded should work
+    gemini.mockRecipes = [recipe2]
+    await sut.loadMoreRecipesIfNeeded()
+    
+    #expect(gemini.getRecipeCallCount == 2)
+    #expect(sut.currentRecipes?.count == 2)
   }
 }
 
