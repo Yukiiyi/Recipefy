@@ -182,14 +182,15 @@ struct RecipeControllerTests {
     #expect(sut.currentRecipes?.first?.favorited == false)
   }
   
-  @Test("toggleFavorite flips favorited in favoriteRecipes")
+  @Test("toggleFavorite removes unfavorited recipe from favoriteRecipes")
   func toggleFavorite_flipsInFavoriteRecipes() async throws {
     let (sut, _, _) = createSUT()
     
     sut.favoriteRecipes = [createMockRecipe(id: "fav1", favorited: true)]
     
     sut.toggleFavorite(for: "fav1")
-    #expect(sut.favoriteRecipes?.first?.favorited == false)
+    // When unfavoriting, the recipe is removed from favoriteRecipes
+    #expect(sut.favoriteRecipes?.isEmpty == true)
   }
   
   @Test("toggleFavorite updates both currentRecipes and favoriteRecipes if present")

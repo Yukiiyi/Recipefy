@@ -181,10 +181,10 @@ struct RecipeTests {
       )
     ]
     
-    // Toggle favorite off
+    // Toggle favorite off - recipe should be removed from favoriteRecipes
     sut.toggleFavorite(for: "fav-1")
     
-    #expect(sut.favoriteRecipes?.first?.favorited == false)
+    #expect(sut.favoriteRecipes?.isEmpty == true)
   }
   
   // MARK: - State Management Tests
