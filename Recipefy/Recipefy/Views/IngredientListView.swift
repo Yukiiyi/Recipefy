@@ -8,24 +8,25 @@
 import SwiftUI
 
 struct IngredientListView: View {
-  let scanId: String
+  let scanId: String?
   let imageDataArray: [Data]
   @EnvironmentObject var navigationState: NavigationState
   @EnvironmentObject var controller: IngredientController
   @EnvironmentObject var recipeController: RecipeController
+  @EnvironmentObject var scanController: ScanController
   @Environment(\.dismiss) var dismiss
   @State private var showingAddForm = false
   @State private var showingEditForm = false
   @State private var ingredientToEdit: Ingredient?
   
   // Convenience init for single image (backward compatibility)
-  init(scanId: String, imageData: Data) {
+  init(scanId: String?, imageData: Data) {
     self.scanId = scanId
     self.imageDataArray = [imageData]
   }
   
   // Primary init for multiple images
-  init(scanId: String, imageDataArray: [Data]) {
+  init(scanId: String?, imageDataArray: [Data]) {
     self.scanId = scanId
     self.imageDataArray = imageDataArray
   }
@@ -59,8 +60,8 @@ struct IngredientListView: View {
           Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-      } else if controller.currentIngredients == nil && !controller.statusText.isEmpty {
-        // Error or non-analyzing status
+      } else if controller.currentIngredients == nil && !controller.statusText.isEmpty && controller.statusText.lowercased().contains("error") {
+        // Show error screen only for actual errors
         VStack(spacing: 12) {
           Spacer()
           Image(systemName: "exclamationmark.triangle")
@@ -76,8 +77,8 @@ struct IngredientListView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
       
-      // Empty state when all ingredients have been deleted
-      if let ingredients = controller.currentIngredients, ingredients.isEmpty, !controller.isAnalyzing {
+      // Empty state when no ingredients (either nil or empty array)
+      if !controller.isAnalyzing && (controller.currentIngredients == nil || controller.currentIngredients?.isEmpty == true) {
         VStack(spacing: 16) {
           Spacer()
           
@@ -164,7 +165,7 @@ struct IngredientListView: View {
           Button(action: {
             Task {
               // Generate recipes from current ingredients
-              await recipeController.getRecipe(ingredients: ingredients, sourceScanId: scanId)
+              await recipeController.getRecipe(ingredients: ingredients, sourceScanId: scanId ?? "manual")
               
               // Switch to Recipes tab to show the generated recipes
               navigationState.navigateToTab(.recipes)
@@ -212,7 +213,13 @@ struct IngredientListView: View {
       if !recipeController.isRetrieving {
         ToolbarItem(placement: .navigationBarTrailing) {
           Button(action: {
-            showingAddForm = true
+            Task {
+              // Create scan if needed before showing add form
+              if scanId == nil {
+                await scanController.createManualScan()
+              }
+              showingAddForm = true
+            }
           }) {
             Image(systemName: "plus")
               .font(.body.weight(.semibold))
@@ -222,17 +229,28 @@ struct IngredientListView: View {
       }
     }
     .sheet(isPresented: $showingAddForm) {
-      IngredientFormView(controller: controller, scanId: scanId)
+      if let scanId = scanId ?? scanController.currentScanId {
+        IngredientFormView(controller: controller, scanId: scanId)
+      }
     }
     .sheet(isPresented: $showingEditForm) {
-      if let ingredient = ingredientToEdit {
+      if let ingredient = ingredientToEdit,
+         let scanId = scanId ?? scanController.currentScanId {
         IngredientFormView(controller: controller, scanId: scanId, ingredient: ingredient)
       }
     }
     .task(id: scanId) {
-      // Only analyze if scanId changed (new scan with different ingredients)
-      if controller.currentScanId != scanId && !controller.isAnalyzing {
-        await controller.analyzeMultipleImages(imageDataArray: imageDataArray, scanId: scanId)
+      // Only analyze if we have a scanId with images
+      if let scanId = scanId, !imageDataArray.isEmpty {
+        // Only analyze if scanId changed (new scan with different ingredients)
+        if controller.currentScanId != scanId && !controller.isAnalyzing {
+          await controller.analyzeMultipleImages(imageDataArray: imageDataArray, scanId: scanId)
+        }
+      } else if let scanId = scanId {
+        // Load existing ingredients if we have a scanId but no images
+        if controller.currentScanId != scanId && !controller.isAnalyzing {
+          await controller.loadIngredients(scanId: scanId)
+        }
       }
     }
     .alert("Error", isPresented: .constant(controller.errorMessage != nil)) {
@@ -256,8 +274,10 @@ struct IngredientListView: View {
     let ingredientsToDelete = offsets.map { categoryIngredients[$0] }
     
     Task {
-      for ingredient in ingredientsToDelete {
-        await controller.deleteIngredient(scanId: scanId, ingredient: ingredient)
+      if let scanId = scanId ?? scanController.currentScanId {
+        for ingredient in ingredientsToDelete {
+          await controller.deleteIngredient(scanId: scanId, ingredient: ingredient)
+        }
       }
     }
   }
@@ -305,6 +325,10 @@ struct IngredientListView: View {
 
 #Preview {
   let navigationState = NavigationState()
+  let scanController = ScanController(
+    storage: FirebaseStorageService(),
+    scans: FirebaseScanRepository()
+  )
   let ingredientController = IngredientController(
     geminiService: GeminiService(),
     firestoreService: FirebaseFirestoreService()
@@ -322,6 +346,7 @@ struct IngredientListView: View {
     Ingredient(id: "4", name: "Olive Oil", quantity: "2", unit: "tbsp", category: .oil)
   ]
   ingredientController.currentScanId = "preview-scan-123"
+  scanController.currentScanId = "preview-scan-123"
   
   return NavigationStack {
     IngredientListView(
@@ -329,6 +354,7 @@ struct IngredientListView: View {
       imageDataArray: []
     )
     .environmentObject(navigationState)
+    .environmentObject(scanController)
     .environmentObject(ingredientController)
     .environmentObject(recipeController)
   }
